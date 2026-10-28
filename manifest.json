@@ -1,0 +1,16 @@
+{
+  "name": "Comanda da Feira · C&G Pastéis",
+  "short_name": "Comanda",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#111111",
+  "theme_color": "#111111",
+  "icons": [
+    {
+      "src": "img/logo.jpg",
+      "sizes": "112x112",
+      "type": "image/jpeg"
+    }
+  ]
+}

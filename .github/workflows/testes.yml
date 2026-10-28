@@ -1,0 +1,20 @@
+name: Testes
+on:
+  push:
+  pull_request:
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Regras de negócio
+        run: npm test
+      - name: Navegador para os testes de tela
+        run: npx playwright install --with-deps chromium
+      - name: Telas em celular e tablet
+        run: npm run test:e2e

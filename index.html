@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Sistema de comandas para barraca de pastel em feira livre: caixa, fritura, bandeja, caldo de cana, estoque e relatórios, em tempo real em vários celulares e tablets.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="C&amp;G Pastéis">
+<meta name="theme-color" content="#111111">
+<title>Comanda da Feira · C&amp;G Pastéis</title>
+<link rel="icon" href="img/logo.jpg">
+<link rel="apple-touch-icon" href="img/logo.jpg">
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="css/estilos.css">
+<script type="module" src="js/app.js"></script>
+</head>
+<body>
+<div class="login" id="login" hidden>
+  <form class="lbox" id="loginForm" novalidate>
+    <img class="logo" src="img/logo.jpg" alt="Logo C&amp;G Pastéis">
+    <h2>C&amp;G Pastéis</h2>
+    <p class="muted" id="loginMsg">Carregando…</p>
+    <label for="lgEmail">E-mail da barraca<input id="lgEmail" type="email" autocomplete="username" inputmode="email" autocapitalize="off"></label>
+    <label for="lgPass">Senha<span class="pw"><input id="lgPass" type="password" autocomplete="current-password"><button type="button" class="eye" id="lgEye" aria-label="Mostrar senha" aria-pressed="false"><svg class="eo" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/></svg><svg class="ec" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M3 3l18 18M10.6 5.1A10.8 10.8 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4M6.6 6.6C3.7 8.4 2 12 2 12s3.6 7 10 7a9.6 9.6 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></button></span></label>
+    <button class="go" type="submit" id="lgBtn">Entrar</button>
+    <p class="hint">Cada aparelho entra uma vez só e continua conectado.</p>
+  </form>
+</div>
+<header class="top">
+  <div class="brand">
+    <div class="brand-id"><img class="logo" alt="Logo C&amp;G Pastéis" src="img/logo.jpg"><div><h1>C&amp;G Pastéis</h1><span class="sub">Comanda da Feira</span></div></div>
+    <div class="top-r">
+      <div class="status"><span class="dot" id="dot"></span><span id="statusTxt">Conectando…</span></div>
+      <button type="button" class="hbtn" id="btnTheme">Tema: automático</button>
+      <button type="button" class="hbtn" id="btnPinned" hidden></button>
+    </div>
+  </div>
+  <nav class="tabs" role="tablist" id="tabs">
+    <button role="tab" data-v="caixa">Caixa</button>
+    <button role="tab" data-v="fritura">Fritura</button>
+    <button role="tab" data-v="bandeja">Bandeja</button>
+    <button role="tab" data-v="caldo">Caldo</button>
+    <button role="tab" data-v="estoque">Estoque</button>
+    <button role="tab" data-v="gerente">Gerente</button>
+    <button role="tab" data-v="ajustes">Ajustes</button>
+  </nav>
+</header>
+
+<main>
+  <div class="demo-bar" id="demoBar" hidden>
+    <div><b>Modo demonstração</b> · dados de exemplo, salvos só neste navegador. Senha do gerente: <b>1234</b>.
+      <span class="demo-dica">Abra este link em duas abas (por exemplo, Caixa numa e Fritura na outra) e faça um pedido para ver ele chegando.</span></div>
+    <button type="button" class="link" id="demoReset">Restaurar exemplo</button>
+  </div>
+  <div class="banner" id="offline" hidden>Sistema fora do ar neste aparelho. Use o plano B: fichas de papel, caixa da esquerda com números ímpares e da direita com pares.</div>
+
+  <div class="novo-pedido" id="novoPedido" role="status" aria-live="assertive" hidden></div>
+  <div class="station" id="station" hidden>
+    <span id="stTxt"></span>
+    <div class="st-r">
+      <div class="seg" id="somTipo" role="group" aria-label="Tipo de som"><button type="button" data-st="sino" aria-pressed="true">Sino</button><button type="button" data-st="bip" aria-pressed="false">Bip forte</button></div>
+      <button type="button" class="sbtn" id="btnSom"></button>
+    </div>
+  </div>
+
+  <div class="lockbar" id="lockBar" hidden>
+    <span>Área protegida. Bloqueia sozinha depois de 15 minutos sem uso.</span>
+    <button type="button" id="btnLockNow">Bloquear agora</button>
+  </div>
+
+  <section id="v-lock" hidden>
+    <div class="lockbox">
+      <svg class="lockico" viewBox="0 0 24 24" width="40" height="40" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M7 11V8a5 5 0 0 1 10 0v3"/><rect x="4.5" y="11" width="15" height="10" rx="2.5" fill="currentColor"/></svg>
+      <h2 id="lkTitle">Área do gerente</h2>
+      <p class="muted" id="lkMsg"></p>
+      <div class="pindots" id="lkDots" aria-live="polite"></div>
+      <button type="button" class="lkeye" id="lkEye" aria-pressed="false"><svg class="eo" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/></svg><svg class="ec" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M3 3l18 18M10.6 5.1A10.8 10.8 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4M6.6 6.6C3.7 8.4 2 12 2 12s3.6 7 10 7a9.6 9.6 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg><span>Mostrar números</span></button>
+      <div class="pad" id="lkPad">
+        <button type="button" data-d="1">1</button><button type="button" data-d="2">2</button><button type="button" data-d="3">3</button>
+        <button type="button" data-d="4">4</button><button type="button" data-d="5">5</button><button type="button" data-d="6">6</button>
+        <button type="button" data-d="7">7</button><button type="button" data-d="8">8</button><button type="button" data-d="9">9</button>
+        <button type="button" data-d="del" class="fn">Apagar</button><button type="button" data-d="0">0</button><button type="button" data-d="ok" class="fn ok">Entrar</button>
+      </div>
+      <button type="button" class="link" id="lkCancel" hidden>Cancelar troca de senha</button>
+    </div>
+  </section>
+
+  <section id="v-caixa" hidden>
+    <div class="cobrar" id="aCobrar" hidden></div>
+    <div class="caixa-head">
+      <div>
+        <div class="label">Este aparelho é o</div>
+        <div class="seg" id="caixaSel">
+          <button data-c="Esquerda" aria-pressed="false">Caixa esquerda</button>
+          <button data-c="Direita" aria-pressed="false">Caixa direita</button>
+        </div>
+      </div>
+      <div class="seq-r"><span class="muted" id="seqInfo"></span><button type="button" class="ghost cx-cancel" id="btnCancelar">Cancelar pedido</button></div>
+    </div>
+    <div class="caixa-grid">
+      <div>
+        <div class="label" style="margin-bottom:8px">Pastel · 1 toque = 1 pastel</div>
+        <div class="keys" id="keysPastel"></div>
+        <div class="label" style="margin-bottom:8px">Caldo de cana · toque nos sabores (se quiser) e depois no tamanho</div>
+        <div class="chips" id="chipsCaldo"></div>
+        <div class="keys" id="keysCaldo"></div>
+        <div class="label" style="margin-bottom:8px">Bebidas · a bandeja entrega junto com os pastéis</div>
+        <div class="keys" id="keysBebida"></div>
+      </div>
+      <aside class="cart">
+        <div class="label">Pedido atual</div>
+        <div class="addbar" id="addBar" hidden><span id="addTxt"></span><button type="button" class="link" id="addCancel">Cancelar</button></div>
+        <ul id="cartList"></ul>
+        <div class="tot"><span>Total</span><span id="cartTotal">R$ 0,00</span></div>
+        <div class="troco" id="troco" hidden>
+          <label class="label" for="trInput">Pagou em dinheiro? Digite quanto o cliente deu</label>
+          <input id="trInput" class="tr-input" type="text" inputmode="numeric" autocomplete="off" placeholder="R$ 0,00" aria-describedby="trHint">
+          <div class="hint" id="trHint">Digite só os números: 6150 vira R$ 61,50. Ou toque nas notas abaixo, que vão somando.</div>
+          <div class="notas" id="notas">
+            <button type="button" data-nota="2">2</button><button type="button" data-nota="5">5</button><button type="button" data-nota="10">10</button><button type="button" data-nota="20">20</button>
+            <button type="button" data-nota="50">50</button><button type="button" data-nota="100">100</button><button type="button" data-nota="200">200</button><button type="button" data-nota="exato" class="exato">Exato</button>
+          </div>
+          <div class="tr-out" id="trOut" hidden>
+            <div class="tr-row"><span>Recebido</span><b id="trRec"></b></div>
+            <div class="tr-row big" id="trLine"><span id="trLbl">Troco</span><b id="trVal"></b></div>
+            <div class="tr-how" id="trHow"></div>
+            <button type="button" class="link" id="trClear">Limpar valor recebido</button>
+          </div>
+        </div>
+        <button type="button" class="ghost split-btn" id="btnSplit" hidden>Dividir conta</button>
+        <div class="split-info" id="splitInfo" hidden><span id="splitTxt"></span><button type="button" class="link" id="splitOpen">Ver divisão</button></div>
+        <div class="consumo" id="pagBox" hidden>
+          <div class="label" id="pagLbl">Pagamento</div>
+          <div class="opts" role="group" aria-labelledby="pagLbl">
+            <button type="button" id="pagAgora" data-pag="agora" aria-pressed="true">Pago agora</button>
+            <button type="button" id="pagDepois" data-pag="depois" aria-pressed="false">Cobrar depois</button>
+          </div>
+          <input id="pagNome" class="pag-nome" type="text" autocomplete="off" maxlength="40" placeholder="Nome ou sinal do cliente (opcional)" aria-label="Nome do cliente para cobrar depois" hidden>
+        </div>
+        <div class="consumo" id="consumo" hidden>
+          <div class="label" id="consLbl">Vai comer aqui ou é para viagem?</div>
+          <div class="opts" role="group" aria-labelledby="consLbl">
+            <button type="button" id="consAqui" data-cons="aqui" aria-pressed="false">Comer aqui</button>
+            <button type="button" id="consViagem" data-cons="viagem" aria-pressed="false">Para viagem</button>
+          </div>
+        </div>
+        <button class="go" id="btnGo" disabled>Finalizar</button>
+        <button class="link" id="btnClear" hidden>Limpar pedido</button>
+      </aside>
+    </div>
+    <div class="cxbar" id="cxBar" hidden>
+      <div><span id="cxN"></span><br><b id="cxT"></b></div>
+      <button type="button" id="cxGo">Fechar pedido</button>
+    </div>
+  </section>
+
+  <section id="v-fritura" hidden>
+    <div id="lots"></div>
+  </section>
+
+  <section id="v-bandeja" hidden>
+    <div class="undo" id="undoBandeja" hidden></div>
+    <div class="orders" id="listBandeja"></div>
+  </section>
+
+  <section id="v-caldo" hidden>
+    <div class="undo" id="undoCaldo" hidden></div>
+    <div class="orders" id="listCaldo"></div>
+  </section>
+
+  <section id="v-estoque" hidden>
+    <div class="est-head">
+      <div style="min-width:0"><h2 style="margin:0">Estoque de hoje</h2><p class="muted" id="estInfo" style="margin:4px 0 0"></p></div>
+      <div><div class="label">Feira de hoje</div>
+        <div class="seg" id="feiraHoje" role="group" aria-label="Feira de hoje">
+          <button type="button" data-fh="terca" aria-pressed="false">Terça</button><button type="button" data-fh="sexta" aria-pressed="false">Sexta</button><button type="button" data-fh="domingo" aria-pressed="false">Domingo</button>
+        </div></div>
+    </div>
+    <form id="stockForm">
+      <div class="stock" id="stockList"></div>
+      <div class="est-foot">
+        <button class="go" type="submit">Salvar estoque de hoje</button>
+        <button class="ghost" type="button" id="stPadrao" hidden>Voltar para o padrão</button>
+      </div>
+    </form>
+    <div class="reset" style="max-width:none">
+      <h2>Estoque padrão de cada feira</h2>
+      <p class="hint" style="margin:0">Quantos pastéis de cada sabor vocês costumam montar em cada feira. Na terça, na sexta e no domingo o sistema já começa o dia com o padrão daquela feira. Só mexa em "Estoque de hoje" se montarem diferente ou para repor.</p>
+      <div class="seg" id="tplSel" role="group" aria-label="Escolher feira para editar o padrão">
+        <button type="button" data-tp="terca" aria-pressed="false">Terça</button><button type="button" data-tp="sexta" aria-pressed="false">Sexta</button><button type="button" data-tp="domingo" aria-pressed="false">Domingo</button>
+      </div>
+      <form id="tplForm">
+        <div class="stock" id="tplList"></div>
+        <button class="go" type="submit" id="tplSave" style="margin-top:14px;width:100%;max-width:560px">Salvar padrão</button>
+      </form>
+    </div>
+  </section>
+
+  <section id="v-gerente" hidden>
+    <div class="g-head">
+      <div class="seg" id="gPer">
+        <button data-p="dia" aria-pressed="true">Dia</button>
+        <button data-p="semana" aria-pressed="false">Semana</button>
+        <button data-p="mes" aria-pressed="false">Mês</button>
+      </div>
+      <div class="g-nav">
+        <button class="navb" id="gPrev" aria-label="Período anterior">‹</button>
+        <span id="gLabel" class="g-label"></span>
+        <button class="navb" id="gNext" aria-label="Próximo período">›</button>
+      </div>
+    </div>
+    <div id="gBody"><div class="idle"><strong>Carregando relatório</strong>Somando as vendas do período…</div></div>
+  </section>
+
+  <section id="v-ajustes" hidden>
+    <h2>Ajustes da barraca</h2>
+    <form class="form" id="cfgForm">
+      <fieldset class="menu" id="mPastel">
+        <legend>Pastéis</legend>
+        <p class="hint">Escreva o recheio de cada pastel no campo "O que vai dentro". É isso que aparece quando o caixa toca em "ver recheio". A ordem aqui é a ordem dos botões no caixa.</p>
+        <div class="mrows" id="rows-pastel"></div>
+        <button type="button" class="ghost add" data-add="pastel">+ Adicionar pastel</button>
+      </fieldset>
+      <fieldset class="menu" id="mCaldo">
+        <legend>Caldo de cana</legend>
+        <div class="mrows" id="rows-caldo"></div>
+        <button type="button" class="ghost add" data-add="caldo">+ Adicionar tamanho</button>
+      </fieldset>
+      <fieldset class="menu" id="mCsabor">
+        <legend>Sabores do caldo</legend>
+        <p class="hint">Não mudam o preço do copo e podem ser misturados. Sem sabor, o caldo sai puro.</p>
+        <div class="mrows" id="rows-csabor"></div>
+        <button type="button" class="ghost add" data-add="csabor">+ Adicionar sabor</button>
+      </fieldset>
+      <fieldset class="menu" id="mBebida">
+        <legend>Bebidas</legend>
+        <p class="hint">A pessoa da bandeja entrega as bebidas junto com os pastéis.</p>
+        <div class="mrows" id="rows-bebida"></div>
+        <button type="button" class="ghost add" data-add="bebida">+ Adicionar bebida</button>
+      </fieldset>
+      <label for="cfgLow">Avisar que o sabor está acabando quando restar
+        <input id="cfgLow" type="number" min="0" max="100" inputmode="numeric"></label>
+      <label for="cfgCap">Pastéis que cabem na fritura de uma vez
+        <input id="cfgCap" type="number" min="1" max="60" inputmode="numeric"></label>
+      <button class="go" type="submit">Salvar ajustes</button>
+      <p class="hint">Os ajustes valem para todos os aparelhos. A numeração dos pedidos recomeça do 1 a cada dia.</p>
+    </form>
+    <div class="reset">
+      <h2>Este aparelho</h2>
+      <p class="hint" style="margin:0">Escolha o posto deste aparelho. Ele vai direto para a aba do posto e as outras abas somem, para ninguém trocar sem querer. Vale só para este aparelho. Para soltar, toque em "Destravar" no topo e digite a senha do gerente.</p>
+      <div class="seg wrap" id="pinSel" role="group" aria-label="Aba deste aparelho">
+        <button type="button" data-pv="" aria-pressed="true">Livre</button>
+        <button type="button" data-pv="caixa" aria-pressed="false">Caixa</button>
+        <button type="button" data-pv="fritura" aria-pressed="false">Fritura</button>
+        <button type="button" data-pv="bandeja" aria-pressed="false">Bandeja</button>
+        <button type="button" data-pv="caldo" aria-pressed="false">Caldo</button>
+      </div>
+    </div>
+    <div class="reset">
+      <h2>Login da barraca</h2>
+      <p class="hint" style="margin:0" id="whoAmI">Este aparelho está conectado com o login da barraca.</p>
+      <button class="ghost" id="btnLogout" type="button" style="align-self:flex-start">Sair deste aparelho</button>
+    </div>
+    <div class="reset">
+      <h2>Senha da área do gerente</h2>
+      <p class="hint" style="margin:0">A senha protege Estoque, Gerente e Ajustes em todos os aparelhos.</p>
+      <button class="ghost" id="btnChangePin" type="button" style="align-self:flex-start">Trocar senha</button>
+    </div>
+    <div class="reset">
+      <h2>Zerar pedidos de hoje</h2>
+      <p class="hint" style="margin:0">Apaga todos os pedidos de hoje e volta a numeração para 001. Use depois de um teste ou para começar o dia do zero. O estoque montado continua salvo, e os sabores voltam a contar sem as vendas apagadas.</p>
+      <p class="muted" id="resetInfo" style="margin:0"></p>
+      <button class="danger" id="btnReset" type="button">Zerar pedidos de hoje</button>
+      <div class="confirm" id="resetConfirm" hidden>
+        <strong>Tem certeza? Isso não dá para desfazer.</strong>
+        <div class="row">
+          <button class="danger" id="btnResetYes" type="button">Sim, apagar tudo de hoje</button>
+          <button class="ghost" id="btnResetNo" type="button">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="overlay" id="ov" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="ovNum">
+    <div class="label">Pedido registrado</div>
+    <div class="bignum" id="ovNum">000</div>
+    <div class="ovtot" id="ovTot"></div>
+    <div class="ovcons" id="ovCons"></div>
+    <div class="fichas" id="ovFichas"></div>
+    <p class="muted" style="margin:0;font-size:14px">Escreva o número na ficha do cliente. Cada setor recebe a sua parte.</p>
+    <button class="go" id="ovClose">Próximo pedido</button>
+  </div>
+</div>
+<div class="overlay" id="ovInfo" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="infoName" style="text-align:left">
+    <div class="label">Pastel</div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap">
+      <h2 id="infoName" style="margin:0;font-size:36px"></h2>
+      <span id="infoPrice" class="ovtot" style="font-size:28px"></span>
+    </div>
+    <div class="label">O que vai dentro</div>
+    <p id="infoDesc" style="margin:0;font-size:20px;line-height:1.45"></p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="go" id="infoAdd" type="button" style="flex:1 1 200px">Adicionar ao pedido</button>
+      <button class="ghost" id="infoClose" type="button" style="flex:1 1 120px">Fechar</button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="ovSplit" hidden>
+  <div class="sheet split" role="dialog" aria-modal="true" aria-labelledby="spTitle" style="text-align:left">
+    <div class="sp-head">
+      <h2 id="spTitle" style="margin:0">Dividir conta</h2>
+      <span class="ovtot" id="spTotal" style="font-size:28px"></span>
+    </div>
+    <div class="seg" id="spMode">
+      <button type="button" data-mode="igual" aria-pressed="true">Partes iguais</button>
+      <button type="button" data-mode="item" aria-pressed="false">Por item</button>
+    </div>
+    <div id="spIgual" class="sp-step">
+      <span class="label">Pessoas</span>
+      <button type="button" class="navb" id="spMinus" aria-label="Menos uma pessoa">−</button>
+      <b id="spN" class="sp-n">2</b>
+      <button type="button" class="navb" id="spPlus" aria-label="Mais uma pessoa">+</button>
+    </div>
+    <div id="spItem" hidden>
+      <div class="label" style="margin-bottom:6px">1. Escolha a pessoa · 2. Toque nos itens dela</div>
+      <p class="hint" style="margin:0 0 8px">Item dividido, como um caldo de 1 litro para dois? Toque nele com cada pessoa que vai dividir. Para tirar alguém, toque de novo com essa pessoa escolhida.</p>
+      <div class="chips" id="spPeople"></div>
+      <div class="units" id="spUnits"></div>
+      <div class="sp-sem" id="spSem"></div>
+    </div>
+    <div class="label">Quanto cada um paga</div>
+    <div class="plist" id="spList"></div>
+    <div class="sp-foot">
+      <button type="button" class="go" id="spDone" style="flex:1 1 200px">Pronto</button>
+      <button type="button" class="ghost" id="spCancel" style="flex:1 1 140px">Não dividir</button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="ovCobrar" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="cbTitle" style="text-align:left">
+    <div class="sp-head"><h2 id="cbTitle" style="margin:0">Receber pedido</h2><span class="ovtot" id="cbTotal" style="font-size:30px"></span></div>
+    <div id="cbItens" style="font-size:17px"></div>
+    <label class="label" for="cbRec">Pagou em dinheiro? Digite quanto o cliente deu</label>
+    <input id="cbRec" class="tr-input" type="text" inputmode="numeric" autocomplete="off" placeholder="R$ 0,00">
+    <div class="tr-row big" id="cbTroco"></div>
+    <div class="tr-how" id="cbHow"></div>
+    <div class="cb-foot">
+      <button type="button" class="go" id="cbDin">Recebido em dinheiro</button>
+      <button type="button" class="ghost" id="cbPix">Recebido no Pix ou cartão</button>
+    </div>
+    <button type="button" class="link" id="cbClose">Fechar sem receber</button>
+  </div>
+</div>
+<div class="overlay" id="ovCancel" hidden>
+  <div class="sheet cancel" role="dialog" aria-modal="true" aria-labelledby="cnTitle">
+    <div class="sp-head"><h2 id="cnTitle" style="margin:0">Cancelar pedido</h2><button type="button" class="link" id="cnClose">Fechar</button></div>
+    <div class="undo" id="cnUndo" hidden></div>
+    <label class="label" for="cnBusca">Número do pedido</label>
+    <input id="cnBusca" class="tr-input" type="text" inputmode="numeric" autocomplete="off" placeholder="Ex.: 12" style="text-align:left">
+    <div class="cn-list" id="cnList"></div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+</body>
+</html>

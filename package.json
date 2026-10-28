@@ -1,0 +1,16 @@
+{
+  "name": "comanda-feira",
+  "version": "1.0.0",
+  "description": "Sistema de comandas em tempo real para barraca de pastel em feira livre (C&G Pastéis).",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node tests/servidor.mjs",
+    "test": "node --test tests/regras.test.mjs",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1"
+  },
+  "license": "MIT"
+}

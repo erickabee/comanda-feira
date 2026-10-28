@@ -1,0 +1,15 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Só o login da barraca lê e grava. Troque o e-mail abaixo pelo e-mail
+    // que você criou em Authentication (passo 3 do LEIA-ME). Para liberar mais
+    // de um login, separe por vírgula: ['um@email.com', 'outro@email.com']
+    function daBarraca() {
+      return request.auth != null
+        && request.auth.token.email in ['EMAIL-DO-LOGIN-DA-BARRACA@exemplo.com'];
+    }
+    match /{document=**} {
+      allow read, write: if daBarraca();
+    }
+  }
+}
