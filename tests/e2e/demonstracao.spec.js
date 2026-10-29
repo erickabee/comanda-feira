@@ -32,6 +32,10 @@ test("começar com a feira vazia zera os pedidos de hoje e mantém o histórico"
   await expect(page.locator("#statusTxt")).toHaveText("Conectado");
   await irPara(page, "fritura");
   await expect(page.locator("#lots .idle")).toContainText("Nenhum pastel para fritar");
+  await expect(page.locator("#lots .alerts")).toHaveCount(0); // nenhum sabor acabando no começo do dia
+  await irPara(page, "caixa");
+  await expect(page.locator("#keysPastel .key.out")).toHaveCount(0);
+  await expect(page.locator("#keysPastel .key.low")).toHaveCount(0);
   await irPara(page, "caixa");
   expect(await fazerPedido(page, { pasteis: ["PIZZA"] })).toBe("001");
   await irPara(page, "gerente");

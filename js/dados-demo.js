@@ -32,7 +32,9 @@ export async function gerarDemo({ vazia = false } = {}) {
   D["config/barraca"] = JSON.parse(JSON.stringify(C));
   const salt = "demo" + Math.random().toString(36).slice(2, 8);
   D["config/pin"] = { salt, hash: await hashPin(salt, PIN_DEMO) };
-  D["config/estoque"] = PADRAO;
+  /* na feira vazia (começo do dia) todos os sabores estão disponíveis; a feira de exemplo deixa
+     o bacon zerado e o camarão acabando, para mostrar os avisos de estoque */
+  D["config/estoque"] = vazia ? Object.fromEntries(Object.entries(PADRAO).map(([f, c]) => [f, Object.fromEntries(Object.entries(c).map(([n, q]) => [n, q || 12]))])) : PADRAO;
   D["stock/" + dia] = { day: dia, feira: FEIRA_DO_DIA[new Date().getDay()] || "sexta" };
 
   /* a feira de hoje: do mais antigo (já entregue) ao mais novo (acabou de chegar) */
