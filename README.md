@@ -110,7 +110,9 @@ npm run test:e2e                   # testes de tela em celular e tablet
 1. Crie um projeto no [Firebase](https://console.firebase.google.com), ative o **Authentication** por e-mail e senha, crie o usuário da barraca e crie o **Firestore**.
 2. Publique as regras de [`firestore.rules`](firestore.rules), trocando o e-mail pelo do usuário da barraca.
 3. Preencha [`js/firebase-config.js`](js/firebase-config.js) com os dados do app web. Com isso o sistema troca sozinho do modo demonstração para o login da barraca.
-4. Publique os arquivos (por exemplo com `firebase deploy`) e adicione o endereço em *Authentication → Domínios autorizados*.
+4. Publique os arquivos com `firebase deploy --only hosting` e adicione o endereço em *Authentication → Domínios autorizados*.
+
+As regras valem para o projeto inteiro, inclusive para o financeiro da barraca, que usa o mesmo Firestore. Publique-as só quando mudarem, sempre a partir deste arquivo com o e-mail da barraca preenchido: uma versão antiga, sem as coleções do financeiro, bloqueia o financeiro sem afetar a comanda.
 
 ## Próximos passos
 
