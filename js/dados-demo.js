@@ -1,5 +1,5 @@
 /* Dados de exemplo do modo demonstração: o cardápio real da C&G Pastéis, uma feira "acontecendo hoje"
-   (pedidos em vários estados) e dez semanas de feiras anteriores para os gráficos do Gerente.
+   (pedidos em vários estados, ou nenhum, com "feira vazia") e dez semanas de feiras anteriores para os gráficos do Gerente.
    Os números de vendas são inventados. */
 import { CARDAPIO_INICIAL as C } from "./cardapio-inicial.js";
 
@@ -27,7 +27,7 @@ const PADRAO = {
 };
 const FEIRA_DO_DIA = { 2: "terca", 5: "sexta", 0: "domingo" };
 
-export async function gerarDemo() {
+export async function gerarDemo({ vazia = false } = {}) {
   const agora = Date.now(), dia = hoje(), D = {};
   D["config/barraca"] = JSON.parse(JSON.stringify(C));
   const salt = "demo" + Math.random().toString(36).slice(2, 8);
@@ -50,7 +50,7 @@ export async function gerarDemo() {
     { num: 9, t: min(6), caixa: "Direita", consumo: "viagem", pastel: { PALMITO: 1, "CARNE/OVO": 1, FRANGO: 2 } },
     { num: 10, t: min(2), caixa: "Esquerda", consumo: "aqui", pastel: { CARNE: 1, QUEIJO: 1 }, bebida: { Sprite: 1 } }
   ];
-  P.forEach((p, i) => {
+  if (!vazia) P.forEach((p, i) => {
     const o = { num: p.num, day: dia, t: p.t, caixa: p.caixa, consumo: p.consumo, pastel: p.pastel || {}, caldo: p.caldo || {}, bebida: p.bebida || {} };
     o.total = totalDe(o);
     const temP = Object.keys(o.pastel).length + Object.keys(o.bebida).length > 0, temC = Object.keys(o.caldo).length > 0;
@@ -61,7 +61,7 @@ export async function gerarDemo() {
     if (p.cancelado) o.canceladoAt = p.t + 60000;
     D["orders/" + (p.id || "demo-" + String(i + 1).padStart(2, "0") + (p.acrescimo ? "b" : ""))] = o;
   });
-  D["counters/" + dia] = { day: dia, n: 10 };
+  D["counters/" + dia] = { day: dia, n: vazia ? 0 : 10 };
 
   /* dez semanas de feiras anteriores (terça, sexta e domingo), já fechadas como resumo do dia */
   const pesoP = { CARNE: 16, QUEIJO: 13, PIZZA: 11, FRANGO: 8, PALMITO: 4, "CARNE/QUEIJO": 12, "CARNE/OVO": 5, CALABRESA: 5, "CARNE/SECA": 5, BROCOLIS: 2, BACON: 1, PORTUGUESA: 3, "CAMARÃO": 2, "FRANGO/QUEIJO": 3, "3 QUEIJOS": 3, ESPECIAL: 4 };

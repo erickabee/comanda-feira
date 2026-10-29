@@ -2,7 +2,7 @@
 
 Sistema de comandas em tempo real para uma barraca de pastel e caldo de cana em feira livre. Os dois caixas lançam os pedidos no celular, e cada posto (fritura, bandeja e caldo) recebe na hora, no seu tablet, só a parte que é dele. Inclui estoque por feira, contas a cobrar, cancelamento e relatórios para o gerente.
 
-**▶ [Abrir a demonstração](https://erickabee.github.io/comanda-feira/)**: abre direto, sem login, com uma feira de exemplo acontecendo. A senha do gerente na demonstração é **1234**. Para ver o tempo real, abra o link em duas abas (o Caixa numa e a Fritura na outra) e faça um pedido.
+**▶ [Abrir a demonstração](https://erickabee.github.io/comanda-feira/)**: abre direto, sem login, com uma feira de exemplo acontecendo. Um **roteiro de 1 minuto** guia pelos quatro postos (caixa → fritura → bandeja → gerente) e marca cada passo sozinho conforme você usa. Para ver o tempo real, abra o link em duas abas (o Caixa numa e a Fritura na outra) e faça um pedido. Se quiser testar do zero, use **"Começar com a feira vazia"**. A senha do gerente na demonstração é **1234**.
 
 ![Testes](https://github.com/erickabee/comanda-feira/actions/workflows/testes.yml/badge.svg)
 
@@ -89,7 +89,7 @@ js/regras.js            regras de negócio puras: troco, divisão de conta, fila
 js/banco.js             escolhe Firebase ou demonstração
 js/banco-firebase.js    login da barraca e Firestore
 js/banco-demo.js        banco no navegador para a demonstração
-js/dados-demo.js        feira de exemplo e histórico de dez semanas
+js/dados-demo.js        feira de exemplo (ou vazia) e histórico de dez semanas
 tests/regras.test.mjs   testes das regras (node --test)
 tests/e2e/              testes de tela (Playwright, celular e tablet)
 firestore.rules         regras de segurança do banco

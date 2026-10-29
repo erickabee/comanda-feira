@@ -51,9 +51,20 @@
 
 <main>
   <div class="demo-bar" id="demoBar" hidden>
-    <div><b>Modo demonstração</b> · dados de exemplo, salvos só neste navegador. Senha do gerente: <b>1234</b>.
-      <span class="demo-dica">Abra este link em duas abas (por exemplo, Caixa numa e Fritura na outra) e faça um pedido para ver ele chegando.</span></div>
-    <button type="button" class="link" id="demoReset">Restaurar exemplo</button>
+    <div class="demo-top">
+      <div><b>Modo demonstração</b> · dados de exemplo, salvos só neste navegador. Senha do gerente: <b>1234</b>.</div>
+      <div class="demo-acoes"><button type="button" class="link" id="demoReset">Restaurar exemplo</button><button type="button" class="link" id="demoVazia">Começar com a feira vazia</button></div>
+    </div>
+    <details class="roteiro" id="roteiro" open>
+      <summary>Roteiro de 1 minuto · <span id="rtCont">0 de 4</span></summary>
+      <ol>
+        <li data-rt="1"><button type="button" data-ir="caixa">Faça um pedido no <b>Caixa</b></button><span>Toque nos pastéis, escolha aqui ou viagem e finalize.</span></li>
+        <li data-rt="2"><button type="button" data-ir="fritura">Veja o pedido chegar na <b>Fritura</b></button><span>Melhor ainda: <a href="./" target="_blank" rel="noopener">abra em outra aba</a>, deixe a Fritura lá e faça o pedido aqui.</span></li>
+        <li data-rt="3"><button type="button" data-ir="bandeja">Entregue na <b>Bandeja</b></button><span>Toque em cada sabor conforme entrega. Quando tudo sai, o pedido fecha sozinho.</span></li>
+        <li data-rt="4"><button type="button" data-ir="gerente">Confira o <b>Gerente</b></button><span>Senha 1234: faturamento do dia, da semana e do mês.</span></li>
+      </ol>
+      <p class="rt-dica" id="rtDica"></p>
+    </details>
   </div>
   <div class="banner" id="offline" hidden>Sistema fora do ar neste aparelho. Use o plano B: fichas de papel, caixa da esquerda com números ímpares e da direita com pares.</div>
 
