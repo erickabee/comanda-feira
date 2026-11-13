@@ -11,7 +11,8 @@ export async function irPara(page, aba) {
 }
 export async function senhaGerente(page, pin = "1234") {
   for (const d of pin) await page.locator(`#lkPad [data-d="${d}"]`).click();
-  await page.locator('#lkPad [data-d="ok"]').click();
+  // a senha certa entra sozinha; o botão Entrar fica para quando ela ainda não entrou
+  await expect(page.locator("#v-lock")).toBeHidden();
 }
 /* monta e finaliza um pedido no caixa; devolve o número que o sistema deu */
 export async function fazerPedido(page, { pasteis = [], bebidas = [], consumo = "aqui", cobrarDepois = null } = {}) {

@@ -101,3 +101,14 @@ test("quem abriu a demonstração antes de o exemplo mudar recebe o exemplo novo
   await expect(page.locator("#statusTxt")).toHaveText("Conectado");
   expect(await page.evaluate(() => !!JSON.parse(localStorage.getItem("comanda-feira-demo-v1")).docs["orders/velho"])).toBe(false);
 });
+
+test("senha certa entra sozinha e 3 erradas travam o teclado por 30 segundos", async ({ page }) => {
+  await abrir(page, "gerente");
+  const pad = d => page.locator(`#lkPad [data-d="${d}"]`);
+  for (const d of "1234") await pad(d).click(); // sem tocar em Entrar
+  await expect(page.locator("#v-lock")).toBeHidden();
+  await page.locator("#lockBar button", { hasText: "Bloquear" }).click();
+  for (const tentativa of ["1111", "2222", "3333"]) for (const d of tentativa) await pad(d).click();
+  await expect(page.locator("#lkMsg")).toContainText("Muitas tentativas erradas");
+  await expect(pad("1")).toBeDisabled();
+});

@@ -71,29 +71,46 @@ function renderLock(){
     enter:unpinning?"Digite a senha do gerente para liberar todas as abas neste aparelho.":"Digite a senha do gerente.",
     new1:changingPin?"Digite a nova senha, de 4 a 6 números.":"Ainda não tem senha. Escolha uma de 4 a 6 números para proteger Estoque, Gerente e Ajustes.",
     new2:"Digite a mesma senha de novo para confirmar."}[m];
-  $("#lkMsg").textContent=pinErr||msg; $("#lkMsg").style.color=pinErr?"var(--warn)":"";
+  const trav=travadoSenha();
+  $("#lkMsg").textContent=trav?`Muitas tentativas erradas. Espere ${mmss(esperaMs())} para tentar de novo.`:(pinErr||msg); $("#lkMsg").style.color=trav||pinErr?"var(--warn)":"";
+  clearTimeout(tentTimer);if(trav)tentTimer=setTimeout(()=>{if(!travadoSenha())pinErr="";if(!$("#v-lock").hidden)renderLock()},1000-(Date.now()%1000)+20);
   const n=Math.max(4,pinEntry.length);
   const showPin=$("#lkEye").getAttribute("aria-pressed")==="true";
   $("#lkDots").classList.toggle("txt",showPin);
   $("#lkDots").innerHTML=showPin?(pinEntry?esc(pinEntry):'<span class="muted" style="font-size:16px;letter-spacing:0;font-family:var(--body);font-weight:600">digite a senha</span>'):Array.from({length:Math.min(6,n)},(_, i)=>`<span class="${i<pinEntry.length?"f":""}"></span>`).join("");
   $("#lkDots").setAttribute("aria-label",pinEntry.length+" números digitados");
-  const off=m==="offline"||m==="loading"||pinBusy;
+  const off=m==="offline"||m==="loading"||pinBusy||trav;
   document.querySelectorAll("#lkPad button").forEach(b=>b.disabled=off);
   $("#lkPad [data-d=ok]").textContent=m==="enter"?"Entrar":m==="new1"?"Continuar":"Salvar";
   $("#lkCancel").hidden=!changingPin&&!unpinning; $("#lkCancel").textContent=unpinning?"Cancelar, continuar preso":"Cancelar troca de senha";
 }
+/* limite de tentativas (vale por aparelho e continua valendo se fechar o app): 3 senhas erradas seguidas
+   travam o teclado por 30 s; cada nova rodada de 3 erros dobra a espera, até 5 minutos. Acertar zera tudo. */
+const TENTATIVAS=3;
+let tent=(()=>{try{return JSON.parse(ls.get("cf.tent","{}"))||{}}catch(e){return {}}})(),tentTimer=null;
+const salvarTent=()=>ls.set("cf.tent",JSON.stringify(tent));
+const esperaMs=()=>Math.max(0,(+tent.ate||0)-Date.now());
+const travadoSenha=()=>pinMode()==="enter"&&esperaMs()>0;
+const mmss=ms=>{const t=Math.ceil(ms/1000);return Math.floor(t/60)+":"+String(t%60).padStart(2,"0")};
+const esperaTxt=r=>{const s=Math.min(300,30*2**r);return s>=60?(s/60)+" minuto"+(s>=120?"s":""):s+" segundos"};
+function senhaErrada(){
+  tent.erros=(+tent.erros||0)+1;
+  if(tent.erros>=TENTATIVAS){tent.ate=Date.now()+Math.min(300,30*2**(+tent.rodadas||0))*1000;tent.rodadas=(+tent.rodadas||0)+1;tent.erros=0;salvarTent();pinFail("");return}
+  salvarTent();const f=TENTATIVAS-tent.erros;
+  pinFail(f===1?`Senha errada. Se errar mais uma vez, o teclado trava por ${esperaTxt(+tent.rodadas||0)}.`:"Senha errada. Tente de novo.")}
+function acertouSenha(){if(tent.erros||tent.ate||tent.rodadas){tent={};salvarTent()}}
 function pinFail(text){pinErr=text;pinEntry="";const d=$("#lkDots");d.classList.remove("shake");void d.offsetWidth;d.classList.add("shake","err");setTimeout(()=>d.classList.remove("err"),900);renderLock()}
 async function savePin(pin){
   const salt=Math.random().toString(36).slice(2,12);
-  await db.doc("config/pin").set({salt,hash:await hashPin(salt,pin)});
+  await db.doc("config/pin").set({salt,hash:await hashPin(salt,pin),len:pin.length});
 }
 async function submitPin(){
   const m=pinMode(),pin=pinEntry;
-  if(m==="enter"){
+  if(m==="enter"){if(travadoSenha()){pinEntry="";renderLock();return}
     if(pin.length<4){pinFail("A senha tem pelo menos 4 números.");return}
     pinBusy=true;renderLock();
     let ok=false;try{ok=(await hashPin(pinDoc.salt,pin))===pinDoc.hash}catch(e){} pinBusy=false;
-    if(ok){unlockedUntil=Date.now()+UNLOCK_MS;pinEntry="";pinErr="";if(unpinning)releasePin();show(view)}else pinFail("Senha errada. Tente de novo.");
+    if(ok){lembrarTamanho(pin);acertouSenha();unlockedUntil=Date.now()+UNLOCK_MS;pinEntry="";pinErr="";if(unpinning)releasePin();show(view)}else senhaErrada();
     return;
   }
   if(m==="new1"){if(pin.length<4){pinFail("Use pelo menos 4 números.");return}pinFirst=pin;pinEntry="";pinErr="";if(changingPin)changeStep=2;renderLock();return}
@@ -104,12 +121,22 @@ async function submitPin(){
     catch(e){pinBusy=false;pinFirst="";if(changingPin)changeStep=1;pinFail("Não salvou. Confira a conexão e tente de novo.")}
   }
 }
+/* guarda quantos números tem a senha (senhas criadas antes não tinham), para avisar o erro já no último número */
+function lembrarTamanho(pin){if(pinDoc&&!pinDoc.len&&db)db.doc("config/pin").update({len:pin.length}).catch(()=>{})}
+/* senha certa entra sozinha, sem tocar em Entrar: a partir do 4º número confere a cada número digitado.
+   Errada avisa quando chega ao tamanho da senha (ou a 6 números, se o tamanho ainda não é conhecido) ou ao tocar em Entrar. */
+async function tentarDireto(){
+  if(pinMode()!=="enter"||pinEntry.length<4||pinBusy||travadoSenha())return;
+  const pin=pinEntry;let ok=false;try{ok=(await hashPin(pinDoc.salt,pin))===pinDoc.hash}catch(e){}
+  if(pinEntry!==pin||pinMode()!=="enter"||$("#v-lock").hidden)return;
+  if(ok){lembrarTamanho(pin);acertouSenha();unlockedUntil=Date.now()+UNLOCK_MS;pinEntry="";pinErr="";if(unpinning)releasePin();show(view)}
+  else if(pin.length>=(+pinDoc.len||6))senhaErrada()}
 $("#lkPad").addEventListener("click",e=>{const b=e.target.closest("button");if(!b||b.disabled)return;const d=b.dataset.d;
   if(d==="del"){pinEntry=pinEntry.slice(0,-1);pinErr="";renderLock();return}
   if(d==="ok"){submitPin();return}
-  if(pinEntry.length<6){pinEntry+=d;pinErr="";renderLock()}});
-document.addEventListener("keydown",e=>{if($("#v-lock").hidden)return;
-  if(/^[0-9]$/.test(e.key)&&pinEntry.length<6){pinEntry+=e.key;pinErr="";renderLock()}
+  if(pinEntry.length<6){pinEntry+=d;pinErr="";renderLock();tentarDireto()}});
+document.addEventListener("keydown",e=>{if($("#v-lock").hidden||travadoSenha())return;
+  if(/^[0-9]$/.test(e.key)&&pinEntry.length<6){pinEntry+=e.key;pinErr="";renderLock();tentarDireto()}
   else if(e.key==="Backspace"){pinEntry=pinEntry.slice(0,-1);renderLock()}
   else if(e.key==="Enter"){e.preventDefault();submitPin()}});
 $("#lkEye").addEventListener("click",()=>{const b=$("#lkEye"),on=b.getAttribute("aria-pressed")!=="true";b.setAttribute("aria-pressed",on);b.querySelector("span").textContent=on?"Esconder números":"Mostrar números";renderLock()});

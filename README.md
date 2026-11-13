@@ -58,7 +58,7 @@ O sistema roda na barraca da C&G Pastéis desde outubro de 2026, nas feiras de t
 
 **Som que funciona na feira.** O aviso sonoro é gerado em código como um arquivo de áudio e tocado por `<audio>`. Assim ele costuma tocar mesmo com o iPhone no silencioso. Há duas opções: um sino "dim-dom", que é o padrão para aguentar horas de feira, e um bip forte.
 
-**Segurança.** Só o e-mail da barraca consegue ler ou gravar no Firestore, conforme as regras em [`firestore.rules`](firestore.rules). A senha do gerente (guardada como hash SHA-256) é uma trava de tela contra acesso casual nos aparelhos da barraca, e não substitui o login.
+**Segurança.** Só o e-mail da barraca consegue ler ou gravar no Firestore, conforme as regras em [`firestore.rules`](firestore.rules). A senha do gerente (guardada como hash SHA-256) é uma trava de tela contra acesso casual nos aparelhos da barraca, e não substitui o login. A senha certa entra sem tocar em "Entrar", e três erradas seguidas travam o teclado daquele aparelho por 30 segundos, com a espera dobrando a cada nova rodada (até 5 minutos).
 
 **Cabe no plano gratuito.** Os pedidos dos dias anteriores viram um resumo por dia, então o relatório do mês lê poucas dezenas de documentos, e não milhares de pedidos.
 
