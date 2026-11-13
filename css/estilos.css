@@ -356,20 +356,24 @@ h2{font-family:var(--display);font-weight:800;text-transform:uppercase;letter-sp
 .oilrow button{font-weight:700;text-decoration:underline;padding:8px 4px;min-height:40px}
 /* Bandeja: marcar cada pastel entregue */
 .ub-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
-.ubg{display:inline-flex;align-items:stretch;border:2px dashed var(--fg);border-radius:12px;overflow:hidden;max-width:100%}
-.ubg .ub-main{padding:10px 14px;font-family:var(--display);font-weight:700;font-size:21px;text-transform:uppercase;min-height:52px;background:var(--surface);color:var(--fg);touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overflow-wrap:break-word;text-align:left;min-width:0}
-.ubg .ub-main b{margin-left:8px;font-variant-numeric:tabular-nums;font-weight:800;white-space:nowrap;display:inline-block}
-.ubg .ub-minus{width:46px;flex:none;border-left:2px solid var(--line);font-size:26px;font-weight:800;background:var(--soft);color:var(--fg);touch-action:manipulation}
-.ubg.part{border-style:solid;border-color:var(--mostarda)}
-.ubg.part .ub-main b{background:var(--mostarda);color:var(--mostarda-fg);border-radius:6px;padding:0 6px}
-.ubg.ok{border-style:solid;border-color:var(--ok)}
-.ubg.ok .ub-main{background:var(--ok);color:var(--ok-fg)}
-.ubg.ok .ub-minus{background:var(--ok);color:var(--ok-fg);border-left-color:color-mix(in srgb,var(--ok-fg) 35%,transparent)}
+/* bandeja: cada sabor num bloco sólido com a fração num selo colorido.
+   cinza = nada entregue · amarelo = entregando · verde, riscado e apagado = já saiu tudo */
+.ubg{display:inline-flex;align-items:stretch;border:2px solid var(--line);border-radius:12px;overflow:hidden;max-width:100%;background:var(--soft)}
+.ubg .ub-main{display:flex;align-items:center;gap:12px;padding:8px 10px 8px 14px;font-family:var(--display);font-weight:800;font-size:24px;line-height:1.05;text-transform:uppercase;min-height:56px;background:transparent;color:var(--fg);touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overflow-wrap:break-word;text-align:left;min-width:0}
+.ubg .ub-main .nm{min-width:0}
+.ubg .ub-main b{font-size:26px;font-variant-numeric:tabular-nums;font-weight:800;white-space:nowrap;display:inline-block;border-radius:8px;padding:3px 9px;background:color-mix(in srgb,var(--fg) 16%,var(--surface));color:var(--fg)}
+.ubg .ub-main b i{font-style:normal;opacity:.6;margin:0 1px}
+.ubg .ub-minus{width:50px;flex:none;border-left:2px solid var(--line);font-size:28px;font-weight:800;background:color-mix(in srgb,var(--fg) 8%,var(--soft));color:var(--fg);touch-action:manipulation}
+.ubg.part{border-color:var(--mostarda)}
+.ubg.part .ub-main b{background:var(--mostarda);color:var(--mostarda-fg)}
+.ubg.ok{border-color:color-mix(in srgb,var(--ok) 55%,var(--line));background:transparent;opacity:.6}
+.ubg.ok .ub-main .nm{color:var(--ok);text-decoration:line-through;text-decoration-thickness:3px}
+.ubg.ok .ub-main b{background:var(--ok);color:var(--ok-fg)}
 @media (max-width:460px){#listBandeja .ord,#listCaldo .ord{grid-template-columns:minmax(0,1fr);gap:8px}#listBandeja .ord .num,#listCaldo .ord .num{font-size:40px}}
 /* bebidas na bandeja: faixa azul própria, nome grande como os pastéis */
 .ub-bebidas{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px;padding:8px;border-radius:12px;border:2px solid var(--beb);background:color-mix(in srgb,var(--beb) 12%,var(--surface))}
 .ub-bebidas .lbl{font-family:var(--display);font-weight:800;font-size:16px;letter-spacing:.06em;text-transform:uppercase;background:var(--beb);color:var(--beb-fg);border-radius:999px;padding:3px 10px}
-.ubg.beb{border-color:var(--beb);border-style:solid}
+.ubg.beb{border-color:var(--beb)}.ubg.beb:not(.ok){background:var(--surface)}
 .frit-estufa{border:2px solid var(--est);background:color-mix(in srgb,var(--est) 12%,var(--surface));border-radius:14px;padding:10px 12px;margin-bottom:12px;display:flex;flex-direction:column;gap:4px}
 .frit-estufa .lbl,.pc-estufa .lbl{font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:.06em;text-transform:uppercase;color:var(--est)}
 .fe-row{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;font-family:var(--display);font-size:28px;font-weight:700;text-transform:uppercase}
@@ -377,7 +381,7 @@ h2{font-family:var(--display);font-weight:800;text-transform:uppercase;letter-sp
 .pc-estufa{margin-top:10px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;border:2px dashed var(--est);border-radius:10px;padding:8px 12px;font-family:var(--display);font-size:28px;font-weight:700;text-transform:uppercase}
 .ub-estufa{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:2px 0 8px;padding:8px;border-radius:12px;border:2px solid var(--est);background:color-mix(in srgb,var(--est) 12%,var(--surface))}
 .ub-estufa .lbl{font-family:var(--display);font-weight:800;font-size:16px;letter-spacing:.06em;text-transform:uppercase;background:var(--est);color:var(--est-fg);border-radius:999px;padding:3px 10px}
-.ubg.est{border-color:var(--est);border-style:solid}
+.ubg.est{border-color:var(--est)}.ubg.est:not(.ok){background:var(--surface)}
 .ubg.est.part{border-color:var(--mostarda)}.ubg.est.ok{border-color:var(--ok)}
 .mrow .chk{flex-direction:row;align-items:center;gap:10px;text-transform:none;letter-spacing:0;font-size:14px;color:var(--fg)}
 .mrow .chk input{width:22px;height:22px;flex:none;padding:0}

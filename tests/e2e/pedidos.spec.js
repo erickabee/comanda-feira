@@ -48,8 +48,14 @@ test("bandeja conta cada sabor entregue e fecha o pedido quando tudo foi entregu
   const carne = pedido.locator('.ub-main[data-key="p|CARNE"]');
   await carne.click();
   await expect(carne).toContainText("1/2");
-  await expect(pedido.locator(".falta")).toContainText("1× CARNE, 1× QUEIJO");
+  await expect(carne.locator("..")).toHaveClass(/part/);              // entregando: selo amarelo
+  // tocou errado? o "−" tira um
   await carne.click();
+  await expect(carne).toContainText("2/2");
+  await pedido.locator('.ub-minus[data-key="p|CARNE"]').click();
+  await expect(carne).toContainText("1/2");
+  await carne.click();
+  await expect(carne.locator("..")).toHaveClass(/ok/);                // saiu tudo: verde e riscado
   await pedido.locator('.ub-main[data-key="p|QUEIJO"]').click();
   await expect(page.locator("#undoBandeja")).toContainText(`Pedido ${n} marcado como entregue`);
 });

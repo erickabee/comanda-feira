@@ -855,17 +855,14 @@ function caldoBlock(o){
   const l=Object.entries(o.caldo||{}).filter(([,q])=>+q>0).sort((a,b)=>menuPos("caldo",a[0].split(" + ")[0])-menuPos("caldo",b[0].split(" + ")[0])||a[0].localeCompare(b[0]));
   return `<div class="cd-list">${l.map(([k,q])=>{const [tam,...sab]=k.split(" + ");
     return `<div class="cd"><span class="cd-q">${+q}×</span><span class="cd-t">${esc(tam)}</span>${sab.length?sab.map(x=>`<span class="cd-s">${esc(x)}</span>`).join(""):'<span class="cd-s puro">Puro</span>'}</div>`}).join("")}</div>`}
-function unitsBlock(o){const u=entUnits(o),algum=u.some(x=>x.d>0);
-  const chip=x=>{const ok=x.d>=x.q;return `<span class="ubg${ok?" ok":x.d?" part":""}${x.k==="bebida"?" beb":estufaSet().has(x.f)?" est":""}"><button type="button" class="ub-main" data-ent="${esc(o.id)}" data-key="${esc(x.key)}" data-op="+" aria-label="${esc(x.f)}: ${x.d} de ${x.q} entregues. Tocar soma um, segurar marca todos.">${ok?"✓ ":""}${esc(x.f)}<b>${x.d}/${x.q}</b></button>${x.d?`<button type="button" class="ub-minus" data-ent="${esc(o.id)}" data-key="${esc(x.key)}" data-op="-" aria-label="Tirar um ${esc(x.f)}">−</button>`:""}</span>`};
+function unitsBlock(o){const u=entUnits(o);
+  const chip=x=>{const ok=x.d>=x.q;return `<span class="ubg${ok?" ok":x.d?" part":""}${x.k==="bebida"?" beb":estufaSet().has(x.f)?" est":""}"><button type="button" class="ub-main" data-ent="${esc(o.id)}" data-key="${esc(x.key)}" data-op="+" aria-label="${esc(x.f)}: ${x.d} de ${x.q} entregues. Tocar soma um, segurar marca todos.">${ok?"✓ ":""}<span class="nm">${esc(x.f)}</span><b>${x.d}<i>/</i>${x.q}</b></button>${x.d?`<button type="button" class="ub-minus" data-ent="${esc(o.id)}" data-key="${esc(x.key)}" data-op="-" aria-label="Tirar um ${esc(x.f)}">−</button>`:""}</span>`};
   /* bebidas numa faixa própria (azul), para não passarem batido no meio dos pastéis */
   /* salgados da estufa em cima (quem está na bandeja pega na estufa), depois pastéis, depois bebidas */
   const st=estufaSet(),estu=u.filter(x=>x.k==="pastel"&&st.has(x.f)),pas=u.filter(x=>x.k==="pastel"&&!st.has(x.f)),beb=u.filter(x=>x.k==="bebida");
-  const fal=l=>l.filter(x=>x.d<x.q).map(x=>(x.q-x.d)+"× "+x.f),fe=fal(estu),fp=fal(pas),fb=fal(beb);
-  const falta=[fe.length?"Estufa: "+fe.join(", "):"",fp.join(", "),fb.length?"Bebidas: "+fb.join(", "):""].filter(Boolean).join(" · ");
   return (estu.length?`<div class="ub-estufa"><span class="lbl">Estufa</span>${estu.map(chip).join("")}</div>`:"")
     +(pas.length?`<div class="ub-wrap">${pas.map(chip).join("")}</div>`:"")
-    +(beb.length?`<div class="ub-bebidas"><span class="lbl">Bebidas</span>${beb.map(chip).join("")}</div>`:"")
-    +(algum&&falta?`<div class="falta">Falta: ${esc(falta)}</div>`:"")}
+    +(beb.length?`<div class="ub-bebidas"><span class="lbl">Bebidas</span>${beb.map(chip).join("")}</div>`:"")}
 /* toque soma 1, "−" tira 1, segurar o sabor marca todos daquele sabor */
 async function setEnt(o,key,op){if(!db)return;const u=entUnits(o).find(x=>x.key===key);if(!u)return;
   const n=op==="all"?u.q:op==="-"?Math.max(0,u.d-1):Math.min(u.q,u.d+1);if(n===u.d)return;
