@@ -78,12 +78,27 @@ h2{font-family:var(--display);font-weight:800;text-transform:uppercase;letter-sp
 .notas button{padding:0 4px;min-width:0}
 .notas button:active{background:var(--line)}
 .consumo{display:flex;flex-direction:column;gap:6px;border-top:1px dashed var(--line);padding-top:10px}
-.consumo .opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.consumo .opts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#pagBox .opts{grid-template-columns:repeat(3,minmax(0,1fr))}
 .consumo .opts button{min-height:58px;border-radius:12px;border:2px solid var(--line);background:var(--surface);font-family:var(--display);font-weight:800;font-size:22px;text-transform:uppercase;letter-spacing:.03em;touch-action:manipulation}
 .consumo .opts button[aria-pressed="true"]{background:var(--lona);color:var(--lona-fg);border-color:var(--lona)}
 .consumo.need .opts button{border-color:var(--mostarda)}
 .cons{display:inline-block;border-radius:999px;padding:2px 10px;font-family:var(--display);font-weight:800;font-size:16px;text-transform:uppercase;letter-spacing:.04em;vertical-align:middle;white-space:nowrap}
 .cons.viagem{background:var(--lona);color:var(--lona-fg)}
+.cons.parte{background:var(--surface);color:var(--fg);border:2px solid var(--lona)}
+.ovcons.parte{background:var(--surface);color:var(--fg);border:3px solid var(--lona)}
+/* parte viagem: no caixa, um − / + por item; nos postos, uma faixa preta com o que vai para viagem */
+.parte-box{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.parte-box ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.parte-box li{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;align-items:center;gap:8px;background:var(--soft);border-radius:10px;padding:6px 8px 6px 12px}
+.parte-box li .nm{font-weight:700;overflow-wrap:anywhere}
+.parte-box li .nm small{display:block;color:var(--muted);font-weight:600}
+.parte-box li button:disabled{opacity:.35}
+.parte-box li button{min-width:46px;min-height:46px;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:var(--fg);font-size:24px;font-weight:800;touch-action:manipulation}
+.parte-box li b{font-family:var(--display);font-size:26px;min-width:28px;text-align:center}
+.parte-box li.on{background:var(--lona);color:var(--lona-fg)}.parte-box li.on .nm small{color:inherit;opacity:.8}
+.viagem-faixa{display:block;background:var(--lona);color:var(--lona-fg);font-weight:800;font-size:20px;line-height:1.25;border-radius:8px;padding:6px 10px;margin:6px 0;overflow-wrap:anywhere}
+.viagem-faixa b{font-family:var(--display);text-transform:uppercase;letter-spacing:.04em;margin-right:6px}
 .cons.aqui{background:var(--soft);color:var(--fg);border:1px solid var(--line)}
 .ovcons{font-family:var(--display);font-weight:800;font-size:30px;text-transform:uppercase;letter-spacing:.04em;border-radius:12px;padding:8px 12px}
 .ovcons.viagem{background:var(--lona);color:var(--lona-fg)}
@@ -436,6 +451,7 @@ main,.overlay .sheet,.cxbar{zoom:var(--zoom,1)}
 .cb-foot{display:flex;gap:10px;flex-wrap:wrap}
 #pagBox .opts{grid-template-columns:repeat(3,minmax(0,1fr))}
 #pagBox .opts button{font-size:18px;padding:4px;line-height:1.05;white-space:normal;overflow-wrap:break-word;min-width:0}
+#consumo .opts button{padding:4px;line-height:1.05;white-space:normal;overflow-wrap:break-word;min-width:0;height:auto}
 .cons.equipe{background:var(--ok);color:var(--ok-fg)}
 .est-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(330px,100%),1fr));gap:10px}
 .erow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px}

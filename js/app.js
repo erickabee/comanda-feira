@@ -251,7 +251,8 @@ function renderCart(){
   const n=sum(cart.pastel)+sum(cart.caldo)+sum(cart.bebida);
   $("#obsBox").hidden=!n; $("#consumo").hidden=!n; $("#consumo").classList.toggle("need",!!n&&!consumo);
   document.querySelectorAll("#consumo [data-cons]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.cons===consumo));
-  $("#btnGo").disabled=!n||busy||!db||!consumo; $("#btnGo").textContent=busy?"Gerando número…":(!n?"Finalizar":!consumo?"Escolha: aqui ou viagem":editando?`Salvar alterações do ${pad(editando.num)}`:addConta?`Acrescentar na conta · ${n} ${n===1?"item":"itens"}`:`Finalizar · ${n} ${n===1?"item":"itens"}`);
+  renderParte();const faltaParte=consumo==="parte"&&!Object.keys(viagemDoCarrinho()).length;
+  $("#btnGo").disabled=!n||busy||!db||!consumo||faltaParte; $("#btnGo").textContent=busy?"Gerando número…":(!n?"Finalizar":!consumo?"Escolha: aqui ou viagem":faltaParte?"Marque o que é para viagem":editando?`Salvar alterações do ${pad(editando.num)}`:addConta?`Acrescentar na conta · ${n} ${n===1?"item":"itens"}`:`Finalizar · ${n} ${n===1?"item":"itens"}`);
   $("#btnClear").hidden=!n;
   /* celular: barra fixa com o total enquanto o botão Finalizar está fora da tela */
   const bar=n>0&&!cartVisible;$("#cxBar").hidden=!bar;document.body.classList.toggle("has-cxbar",n>0);
@@ -261,7 +262,19 @@ try{new IntersectionObserver(es=>{cartVisible=es[0].isIntersecting;renderCart()}
 $("#cxGo").addEventListener("click",()=>{const g=$("#btnGo");try{g.scrollIntoView({behavior:"smooth",block:"end"})}catch(_){g.scrollIntoView(false)}});
 /* comer aqui ou para viagem: escolha obrigatória a cada pedido */
 let consumo=null;
-const CONS={aqui:"Comer aqui",viagem:"Para viagem"};
+const CONS={aqui:"Comer aqui",viagem:"Para viagem",parte:"Parte viagem"};
+/* parte viagem: quantos de cada item vão para viagem (o resto é para comer aqui) */
+let viagemSel=emptyCart();
+const viagemDoCarrinho=()=>{const v={};["pastel","caldo","bebida"].forEach(k=>{const m={};Object.entries(viagemSel[k]||{}).forEach(([f,q])=>{q=Math.min(+q||0,+cart[k][f]||0);if(q>0)m[f]=q});if(Object.keys(m).length)v[k]=m});return v};
+const viagemTxt=(o,kinds)=>o.consumo==="parte"&&o.viagem?kinds.map(k=>fmtItems((o.viagem||{})[k])).filter(Boolean).join(", "):"";
+const viagemTag=(o,kinds)=>{const t=viagemTxt(o,kinds);return t?`<div class="viagem-faixa"><b>Viagem:</b>${esc(t)}</div>`:""};
+function renderParte(){const on=consumo==="parte";$("#parteBox").hidden=!on;if(!on)return;
+  const tag={pastel:"",caldo:"caldo",bebida:"bebida"},rows=[];
+  ["pastel","caldo","bebida"].forEach(k=>Object.entries(cart[k]).forEach(([f,q])=>{if(!(q>0))return;const v=Math.min(+(viagemSel[k]||{})[f]||0,q);
+    rows.push(`<li class="${v?"on":""}"><span class="nm">${esc(f)}<small>${q} no pedido${tag[k]?" · "+tag[k]:""}</small></span><button type="button" data-vg="${k}" data-f="${esc(f)}" data-op="-" aria-label="Um ${esc(f)} a menos para viagem"${v?"":" disabled"}>−</button><b>${v}</b><button type="button" data-vg="${k}" data-f="${esc(f)}" data-op="+" aria-label="Um ${esc(f)} a mais para viagem"${v>=q?" disabled":""}>+</button></li>`)}));
+  $("#parteList").innerHTML=rows.join("")}
+$("#parteList").addEventListener("click",e=>{const b=e.target.closest("[data-vg]");if(!b)return;const k=b.dataset.vg,f=b.dataset.f,q=+cart[k][f]||0;
+  const m=viagemSel[k]=viagemSel[k]||{};m[f]=Math.max(0,Math.min(q,(+m[f]||0)+(b.dataset.op==="+"?1:-1)));if(!m[f])delete m[f];renderCart()});
 /* nome de quem pediu: o da ficha a cobrar (acréscimo herda o da conta) ou o da equipe */
 const nomeDe=o=>{if(o.cobrarNome||o.equipeNome)return o.cobrarNome||o.equipeNome;
   if(o.conta){const c=allOrders.find(x=>x.id===o.conta);if(c&&c.cobrarNome)return c.cobrarNome}return ""};
@@ -290,7 +303,7 @@ document.addEventListener("click",e=>{
   const m=e.target.closest("[data-minus]");
   if(m){const kind=m.dataset.minus,f=m.dataset.f;cart[kind][f]=Math.max(0,(cart[kind][f]||0)-1);if(!cart[kind][f])delete cart[kind][f];renderKeys();renderCart()}
 });
-$("#btnClear").addEventListener("click",()=>{cart=emptyCart();recebido=0;split=null;consumo=null;pagar="agora";addConta=null;editando=null;$("#pagNome").value="";obsLimpar();syncTrInput();renderKeys();renderCart()});
+$("#btnClear").addEventListener("click",()=>{cart=emptyCart();recebido=0;split=null;consumo=null;pagar="agora";addConta=null;editando=null;$("#pagNome").value="";obsLimpar();viagemSel=emptyCart();syncTrInput();renderKeys();renderCart()});
 /* ---------- fichas a cobrar: pedido sai para produção e o caixa cobra depois ---------- */
 let pagar="agora",cbKey=null,cbRec=0,addConta=null;
 $("#pagBox").addEventListener("click",e=>{const b=e.target.closest("[data-pag]");if(!b)return;pagar=b.dataset.pag;
@@ -420,11 +433,11 @@ function iniciarEdicao(o){
   cart={pastel:{...(o.pastel||{})},caldo:{...(o.caldo||{})},bebida:{...(o.bebida||{})}};
   consumo=CONS[o.consumo]?o.consumo:null;split=null;recebido=0;addConta=null;syncTrInput();
   editando={id:o.id,num:o.num,acrescimo:!!o.acrescimo,aCobrar:o.pago===false};
-  pagar=o.pago===false?"depois":o.equipe?"equipe":"agora";$("#pagNome").value=o.cobrarNome||o.equipeNome||"";$("#obsTxt").value=o.obs||"";obsChipsSync();
+  pagar=o.pago===false?"depois":o.equipe?"equipe":"agora";$("#pagNome").value=o.cobrarNome||o.equipeNome||"";$("#obsTxt").value=o.obs||"";obsChipsSync();viagemSel=o.consumo==="parte"&&o.viagem?JSON.parse(JSON.stringify(o.viagem)):emptyCart();
   $("#ovCancel").hidden=true;$("#ovCobrar").hidden=true;cbKey=null;show("caixa");renderKeys();renderCart();
   try{$(".cart").scrollIntoView({behavior:"smooth",block:"start"})}catch(_){}
   toast(`Editando o pedido ${pad(o.num)}: mude os itens e toque em Salvar alterações.`)}
-function cancelarEdicao(){editando=null;cart=emptyCart();consumo=null;pagar="agora";$("#pagNome").value="";obsLimpar();renderKeys();renderCart()}
+function cancelarEdicao(){editando=null;cart=emptyCart();consumo=null;pagar="agora";$("#pagNome").value="";obsLimpar();viagemSel=emptyCart();renderKeys();renderCart()}
 $("#editCancel").addEventListener("click",cancelarEdicao);
 async function salvarEdicao(cons){
   const ed=editando,o=orders.find(x=>x.id===ed.id);
@@ -447,7 +460,7 @@ async function salvarEdicao(cons){
   const ord=x=>JSON.stringify(Object.entries(x||{}).filter(([,q])=>+q>0).sort());
   upd.caldoDone=!temC?true:(ord(caldo)!==ord(o.caldo)?false:!!o.caldoDone);
   if(o.pago===false)upd.cobrarNome=$("#pagNome").value.trim().slice(0,40);
-  upd.obs=obsLer()||null;
+  upd.obs=obsLer()||null;upd.viagem=cons==="parte"?viagemDoCarrinho():null;
   const c=contas().find(x=>x.l.some(y=>y.id===o.id));
   try{
     await db.venda({day:today(),feira:feiraHoje(),id:o.id,patch:upd,vendLocal:vendLocal()});
@@ -457,7 +470,7 @@ async function salvarEdicao(cons){
     $("#ovCons").textContent=CONS[cons];$("#ovCons").className="ovcons "+cons;
     $("#ovTot").textContent=o.equipe?"Equipe · não cobra · "+brl(total)+" a preço de venda":"Total "+brl(total)+(o.pago===false?" · a cobrar":dif>0?" · cobrar mais "+brl(dif/100):dif<0?" · devolver "+brl(-dif/100)+" ao cliente":" · mesmo valor");
     $("#ovFichas").innerHTML=`<div class="ficha"><b>${pad(o.num)} · novo pedido</b><div>${esc(itemsAll({pastel,caldo,bebida}))}</div>${upd.obs?`<div><b>Obs:</b> ${esc(upd.obs)}</div>`:""}<div class="hint">Antes: ${esc(itemsAll(o))}</div></div>`;
-    editando=null;cart=emptyCart();consumo=null;pagar="agora";$("#pagNome").value="";obsLimpar();syncTrInput();renderKeys();
+    editando=null;cart=emptyCart();consumo=null;pagar="agora";$("#pagNome").value="";obsLimpar();viagemSel=emptyCart();syncTrInput();renderKeys();
     $("#ov").hidden=false;$("#ovClose").focus();
   }catch(err){if(err&&err.code==="sem-estoque")toastLongo(semEstoqueMsg(err));else toast("Não salvou. Confira a internet e toque de novo.")}
   busy=false;renderCart();render()}
@@ -680,6 +693,7 @@ $("#btnGo").addEventListener("click",async()=>{
     const rec=recebido,troco=rec?Math.round((rec-total)*100)/100:0;
     const ord={num:n,day:today(),t:Date.now(),caixa,consumo:cons,pastel,caldo,bebida,total:equipe?0:total,pastelDone:!hasP&&!hasB,caldoDone:!hasC};
     const obs=obsLer();if(obs)ord.obs=obs;
+    if(cons==="parte")ord.viagem=viagemDoCarrinho();
     /* equipe: produção e estoque normais, mas não entra no faturamento (o valor fica guardado só para o relatório) */
     if(equipe){ord.equipe=true;ord.valorEquipe=total;if(nome)ord.equipeNome=nome}
     else if(depois){ord.pago=false;if(nome)ord.cobrarNome=nome;if(ac){ord.conta=ac.k;ord.acrescimo=true}}
@@ -688,13 +702,13 @@ $("#btnGo").addEventListener("click",async()=>{
     const nSplit=split?split.n:0;
     /* pedido novo: número e pedido gravados juntos numa única conversa com o servidor (mais rápido no 4G) */
     n=(await db.venda({day:today(),feira:feiraHoje(),criar:ord,numFixo:ac?ac.num:0,vendLocal:vendLocal()})).n;ord.num=n;
-    cart=emptyCart(); recebido=0; split=null; consumo=null; pagar="agora"; addConta=null; $("#pagNome").value=""; obsLimpar(); syncTrInput(); renderKeys();
+    cart=emptyCart(); recebido=0; split=null; consumo=null; pagar="agora"; addConta=null; $("#pagNome").value=""; obsLimpar();viagemSel=emptyCart(); syncTrInput(); renderKeys();
     $("#ovLbl").textContent="Pedido registrado";
     $("#ovNum").textContent=pad(n);
     $("#ovCons").textContent=CONS[cons]; $("#ovCons").className="ovcons "+cons;
-    const fc=` · ${cons==="viagem"?"Viagem":"Aqui"}`;
+    const fc=` · ${cons==="viagem"?"Viagem":cons==="parte"?"Parte viagem":"Aqui"}`;
     $("#ovTot").textContent=equipe?"Equipe · não cobra"+(nome?" ("+nome+")":"")+" · "+brl(total)+" a preço de venda":"Total "+brl(total)+(depois?(ac?" · acrescentado na conta "+ac.nums:" · A COBRAR")+(nome?" ("+nome+")":""):nSplit?" · dividido em "+nSplit:(rec?(troco>=0?" · Troco "+brl(troco):" · Falta "+brl(-troco)):""));
-    $("#ovFichas").innerHTML=(hasP||hasB?`<div class="ficha"><b>${pad(n)} · Bandeja${fc}</b>${hasP?`<div>${esc(fmtItems(pastel))}</div>`:""}${hasB?`<div>Bebida: ${esc(fmtItems(bebida))}</div>`:""}${obs?`<div><b>Obs:</b> ${esc(obs)}</div>`:""}<div class="hint">A bandeja entrega ${hasP&&hasB?"pastel e bebida":hasP?"o pastel":"a bebida"}</div></div>`:"")
+    $("#ovFichas").innerHTML=(hasP||hasB?`<div class="ficha"><b>${pad(n)} · Bandeja${fc}</b>${hasP?`<div>${esc(fmtItems(pastel))}</div>`:""}${hasB?`<div>Bebida: ${esc(fmtItems(bebida))}</div>`:""}${ord.viagem&&viagemTxt(ord,["pastel","bebida"])?`<div><b>Viagem:</b> ${esc(viagemTxt(ord,["pastel","bebida"]))}</div>`:""}${obs?`<div><b>Obs:</b> ${esc(obs)}</div>`:""}<div class="hint">A bandeja entrega ${hasP&&hasB?"pastel e bebida":hasP?"o pastel":"a bebida"}</div></div>`:"")
       +(hasC?`<div class="ficha"><b>${pad(n)} · Caldo${fc}</b><div>${esc(fmtItems(caldo))}</div><div class="hint">Vai para o caldo</div></div>`:"");
     $("#ov").hidden=false; $("#ovClose").focus();
   }catch(err){if(err&&err.code==="sem-estoque"){toastLongo(semEstoqueMsg(err))}else toast(err&&err.code==="quota_exceeded"?"O sistema atingiu o limite de pedidos guardados. Avise o Erick.":"Não deu para registrar. Toque em Finalizar de novo.")}
@@ -819,7 +833,7 @@ function renderList(kind){
   const naoEspera=o=>isP&&!sum(fritaveis(o.pastel));
   const list=orders.filter(o=>!o[doneF]&&has(o)).sort((a,b)=>(naoEspera(b)-naoEspera(a))||fila(a,b));
   const el=$(isP?"#listBandeja":"#listCaldo");
-  el.innerHTML=list.length?list.map(o=>`<div class="ord"><span class="num">${pad(o.num)}</span><div class="items">${nomeTag(o)}${naoEspera(o)?'<span class="st ready">pronto para entregar</span>':""}${isP&&sum(fritaveis(o.pastel))>0?(o.oleo?'<span class="st oil">no óleo</span>':'<span class="st wait">esperando fritar</span>'):""}${consTag(o)?consTag(o)+" ":""}${acTag(o)}${o.pago===false?'<span class="cons acobrar">A cobrar</span> ':""}${obsTag(o)}${isP?unitsBlock(o):caldoBlock(o)}<div class="meta">Caixa ${esc(o.caixa||"")}</div></div><button class="done" data-done="${kind}" data-id="${esc(o.id)}">Entregue</button></div>`).join("")
+  el.innerHTML=list.length?list.map(o=>`<div class="ord"><span class="num">${pad(o.num)}</span><div class="items">${nomeTag(o)}${naoEspera(o)?'<span class="st ready">pronto para entregar</span>':""}${isP&&sum(fritaveis(o.pastel))>0?(o.oleo?'<span class="st oil">no óleo</span>':'<span class="st wait">esperando fritar</span>'):""}${consTag(o)?consTag(o)+" ":""}${acTag(o)}${o.pago===false?'<span class="cons acobrar">A cobrar</span> ':""}${viagemTag(o,isP?["pastel","bebida"]:["caldo"])}${obsTag(o)}${isP?unitsBlock(o):caldoBlock(o)}<div class="meta">Caixa ${esc(o.caixa||"")}</div></div><button class="done" data-done="${kind}" data-id="${esc(o.id)}">Entregue</button></div>`).join("")
     :`<div class="idle"><strong>Tudo entregue</strong>${isP?"Os pedidos de pastel e bebida aparecem aqui na ordem em que foram feitos.":"Os pedidos de caldo aparecem aqui na ordem em que foram feitos."}</div>`;
   const u=$(isP?"#undoBandeja":"#undoCaldo"), last=lastUndo[kind];
   u.hidden=!last; if(last)u.innerHTML=`<span>Pedido ${pad(last.num)} marcado como entregue.</span><button data-undo="${kind}">Desfazer</button>`;
@@ -949,7 +963,7 @@ function renderFechamento(){
   $("#gBody").innerHTML=`
     <div class="kpis">
       <div class="kpi"><span class="label">Faturamento do dia</span><span class="v">${brl(s.total)}</span><span class="d">${k===today()?"Hoje, ainda somando":"Dia fechado"}</span></div>
-      <div class="kpi"><span class="label">Pedidos</span><span class="v">${s.orders}</span><span class="d">Ticket médio ${brl(s.total/s.orders)}${s.consumo?` · ${s.consumo.aqui||0} aqui · ${s.consumo.viagem||0} viagem`:""}${s.equipe?`<br>Equipe: ${s.equipe} pedido${s.equipe===1?"":"s"} · ${brl(s.equipeValor)} a preço de venda (não cobrado)`:""}${s.cancelados?`<br><span style="color:var(--warn)">${s.cancelados} cancelado${s.cancelados===1?"":"s"} · ${brl(s.canceladosValor)} fora do faturamento</span>`:""}</span></div>
+      <div class="kpi"><span class="label">Pedidos</span><span class="v">${s.orders}</span><span class="d">Ticket médio ${brl(s.total/s.orders)}${s.consumo?` · ${s.consumo.aqui||0} aqui · ${s.consumo.viagem||0} viagem${s.consumo.parte?` · ${s.consumo.parte} parte viagem`:""}`:""}${s.equipe?`<br>Equipe: ${s.equipe} pedido${s.equipe===1?"":"s"} · ${brl(s.equipeValor)} a preço de venda (não cobrado)`:""}${s.cancelados?`<br><span style="color:var(--warn)">${s.cancelados} cancelado${s.cancelados===1?"":"s"} · ${brl(s.canceladosValor)} fora do faturamento</span>`:""}</span></div>
       <div class="kpi"><span class="label">Vendidos</span><span class="v">${pq} <span style="font-size:18px">pastéis</span></span><span class="d">${cq} caldo${cq===1?"":"s"} · ${bq} bebida${bq===1?"":"s"}</span></div>
     </div>
     ${(()=>{const x=valorDe(s);return tiposHTML(x.v,x.est)})()}

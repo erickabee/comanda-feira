@@ -27,8 +27,8 @@ test("observação e nome do cliente aparecem para a bandeja e a fritura", async
   await page.locator('#keysPastel .key[data-f="CARNE"]').click();
   await page.locator('#keysPastel .key[data-f="QUEIJO"]').click();
   await page.locator('[data-obs="+ vinagrete"]').click();
-  await page.locator('[data-obs="1 para viagem"]').click();
-  await expect(page.locator("#obsTxt")).toHaveValue("+ vinagrete, 1 para viagem");
+  await page.locator('[data-obs="+ ketchup"]').click();
+  await expect(page.locator("#obsTxt")).toHaveValue("+ vinagrete, + ketchup");
   await page.locator("#pagDepois").click();
   await page.locator("#pagNome").fill("Seu Joaquim");
   await page.locator("#consAqui").click();
@@ -39,7 +39,7 @@ test("observação e nome do cliente aparecem para a bandeja e a fritura", async
   await irPara(page, "bandeja");
   const card = page.locator("#listBandeja .ord", { hasText: n });
   await expect(card.locator(".pnome")).toHaveText("Seu Joaquim");
-  await expect(card.locator(".obs")).toContainText("+ vinagrete, 1 para viagem");
+  await expect(card.locator(".obs")).toContainText("+ vinagrete, + ketchup");
   await irPara(page, "fritura");
   await expect(page.locator("#lots .pcard", { hasText: n }).locator(".pnome")).toHaveText("Seu Joaquim");
 });
@@ -64,4 +64,23 @@ test("o gerente vê quanto entrou em pastel, caldo e bebida", async ({ page }) =
   await expect(painel).toContainText("Pastéis");
   await expect(painel).toContainText("Caldo de cana");
   await expect(painel).toContainText("Bebidas");
+});
+
+test("parte viagem: o caixa marca o que vai para viagem e a bandeja vê numa faixa", async ({ page }) => {
+  await abrir(page);
+  for (const f of ["CARNE", "CARNE", "QUEIJO"]) await page.locator(`#keysPastel .key[data-f="${f}"]`).click();
+  await page.locator('#keysBebida .key[data-f="Coca lata"]').click();
+  await page.locator("#consParte").click();
+  await expect(page.locator("#btnGo")).toBeDisabled();
+  await expect(page.locator("#btnGo")).toHaveText("Marque o que é para viagem");
+  await page.locator('[data-vg="pastel"][data-f="CARNE"][data-op="+"]').click();
+  await page.locator('[data-vg="bebida"][data-f="Coca lata"][data-op="+"]').click();
+  await page.locator("#btnGo").click();
+  await expect(page.locator("#ovFichas")).toContainText("Viagem: 1× carne, 1× coca lata");
+  const n = (await page.locator("#ovNum").textContent()).trim();
+  await page.locator("#ovClose").click();
+  await irPara(page, "bandeja");
+  const card = page.locator("#listBandeja .ord", { hasText: n });
+  await expect(card.locator(".cons.parte")).toHaveText("Parte viagem");
+  await expect(card.locator(".viagem-faixa")).toContainText("1× carne, 1× coca lata");
 });

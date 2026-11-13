@@ -160,14 +160,19 @@
           <div class="opts" role="group" aria-labelledby="consLbl">
             <button type="button" id="consAqui" data-cons="aqui" aria-pressed="false">Comer aqui</button>
             <button type="button" id="consViagem" data-cons="viagem" aria-pressed="false">Para viagem</button>
+            <button type="button" id="consParte" data-cons="parte" aria-pressed="false">Parte viagem</button>
+          </div>
+          <div class="parte-box" id="parteBox" hidden>
+            <div class="hint" style="margin:0">Quantos de cada são <b>para viagem</b>? O resto é para comer aqui.</div>
+            <ul id="parteList"></ul>
           </div>
         </div>
         <div class="consumo" id="obsBox" hidden>
           <label class="label" for="obsTxt">Observação para a bandeja (opcional)</label>
           <div class="obs-chips" id="obsChips">
-            <button type="button" data-obs="+ vinagrete">+ Vinagrete</button><button type="button" data-obs="+ maionese">+ Maionese</button><button type="button" data-obs="+ ketchup">+ Ketchup</button><button type="button" data-obs="1 para viagem">1 para viagem</button>
+            <button type="button" data-obs="+ vinagrete">+ Vinagrete</button><button type="button" data-obs="+ maionese">+ Maionese</button><button type="button" data-obs="+ ketchup">+ Ketchup</button>
           </div>
-          <input id="obsTxt" class="pag-nome" type="text" autocomplete="off" maxlength="120" placeholder="Ex.: 1 dos 3 é para viagem">
+          <input id="obsTxt" class="pag-nome" type="text" autocomplete="off" maxlength="120" placeholder="Ex.: o de queijo bem passado">
         </div>
         <button class="go" id="btnGo" disabled>Finalizar</button>
         <button class="link" id="btnClear" hidden>Limpar pedido</button>

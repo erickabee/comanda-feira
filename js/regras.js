@@ -29,7 +29,7 @@ export function addOrder(s,o,preco){if(o.equipe&&!o.cancelado){s.equipe=(+s.equi
   const cash=cashOf(o);s.dinheiro=r2((+s.dinheiro||0)+cash);s.troco=r2((+s.troco||0)+trocoOf(o));
   s.porCaixa=s.porCaixa||{};const n=o.caixa||"sem nome",c=s.porCaixa[n]=s.porCaixa[n]||{orders:0,total:0,dinheiro:0};
   if(!o.acrescimo)c.orders++;c.total=r2(c.total+(+o.total||0));c.dinheiro=r2(c.dinheiro+cash);
-  if((o.consumo==="aqui"||o.consumo==="viagem")&&!o.acrescimo){s.consumo={...(s.consumo||{})};s.consumo[o.consumo]=(s.consumo[o.consumo]||0)+1}
+  if((o.consumo==="aqui"||o.consumo==="viagem"||o.consumo==="parte")&&!o.acrescimo){s.consumo={...(s.consumo||{})};s.consumo[o.consumo]=(s.consumo[o.consumo]||0)+1}
   if(o.pago===false)s.aReceber=r2((+s.aReceber||0)+(+o.total||0))}
 
 /* Divide a conta em centavos. "igual": partes iguais, os centavos que sobram vão para as primeiras pessoas.
