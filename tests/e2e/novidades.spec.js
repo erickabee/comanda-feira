@@ -41,7 +41,7 @@ test("observação e nome do cliente aparecem para a bandeja e a fritura", async
   await expect(card.locator(".pnome")).toHaveText("Seu Joaquim");
   await expect(card.locator(".obs")).toContainText("+ vinagrete, + ketchup");
   await irPara(page, "fritura");
-  await expect(page.locator("#lots .pcard", { hasText: n }).locator(".pnome")).toHaveText("Seu Joaquim");
+  await expect(page.locator("#lots .pcard", { hasText: n }).locator(".fr-sub")).toContainText("Seu Joaquim");
 });
 
 test("pedido da equipe vai para a produção mas não entra no faturamento", async ({ page }) => {
@@ -128,4 +128,16 @@ test("fritura: o que cabe no fogo em cartões, o resto em 'próximas levas', e s
   await expect(page.locator("#lots .obs")).toHaveCount(0);
   await irPara(page, "bandeja");
   await expect(page.locator("#listBandeja .ord", { hasText: n }).locator(".obs")).toContainText("+ maionese");
+});
+
+test("fritura: acréscimo da mesma ficha entra no cartão do pedido e vai junto para o óleo", async ({ page }) => {
+  await abrir(page, "fritura");
+  // no exemplo, o 007 (a cobrar) tem um acréscimo: os dois aparecem num cartão só
+  const c = page.locator(".fr-card", { hasText: "007" });
+  await expect(c).toHaveCount(1);
+  await expect(c.locator(".fr")).toHaveCount(2);
+  await expect(c).toContainText("3 pastéis");
+  await c.locator(".fry-in").click();
+  await expect(page.locator(".fr-card", { hasText: "007" })).toHaveCount(0);
+  await expect(page.locator(".oilbox")).toContainText("007");
 });

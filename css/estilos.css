@@ -323,6 +323,10 @@ h2{font-family:var(--display);font-weight:800;text-transform:uppercase;letter-sp
 .top-r{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .hbtn{border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:700;color:var(--bar-fg);white-space:nowrap;min-height:34px}
 .hbtn:active{background:rgba(255,255,255,.14)}
+/* celular preso num posto: o topo vira uma linha fina, com botões curtos */
+@media (max-width:700px){body.preso .top{padding:6px 12px}body.preso .brand{flex-wrap:nowrap}body.preso .brand .sub{display:none}
+  body.preso .logo{width:30px;height:30px}body.preso .brand h1{font-size:18px}body.preso #statusTxt{display:none}
+  body.preso .top-r{flex-wrap:nowrap;gap:6px}body.preso .hbtn{padding:4px 10px;font-size:15px;min-height:36px}}
 /* Barra do posto (som) na Fritura */
 .station{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--soft);border-radius:12px;padding:8px 12px;margin-bottom:14px;font-size:15px;color:var(--muted)}
 .station .sbtn{border-radius:10px;padding:10px 14px;font-weight:700;background:var(--surface);color:var(--fg);border:2px solid var(--line);min-height:44px}
@@ -492,18 +496,25 @@ main,.overlay .sheet,.cxbar{zoom:var(--zoom,1)}
    embaixo, as próximas levas numa linha cada. Só rola para baixo, nunca para o lado. */
 .fr-sec{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;font-family:var(--display);font-weight:800;font-size:22px;text-transform:uppercase;letter-spacing:.03em;margin:2px 2px 8px}
 .fr-sec small{font-size:18px;color:var(--muted)}
-.fr-fogo{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:10px;align-items:start;margin-bottom:16px}
-.fr-fogo .pcard{margin:0;display:flex;flex-direction:column;gap:5px;padding:8px 12px 10px}
-.fr-fogo .pc-head{margin:0;align-items:center;gap:6px 8px;justify-content:flex-start}
-.fr-fogo .pc-head .total{margin-left:auto}
+.fr-fogo{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(290px,100%),1fr));gap:12px;align-items:stretch;margin-bottom:16px}
+.fr-fogo .pcard{margin:0;display:flex;flex-direction:column;gap:6px;padding:10px 12px 12px}
+.fr-fogo .pc-head{margin:0;align-items:baseline;justify-content:space-between;gap:8px}
+.fr-fogo .pc-num{font-size:52px}
+.fr-sub{font-family:var(--display);font-weight:800;font-size:20px;text-transform:uppercase;letter-spacing:.02em;color:var(--muted);line-height:1.2;min-height:1.2em;overflow-wrap:anywhere}
+.fr-sub b{color:var(--fg)}
+.fr-sub .novo-tag{font-size:16px;padding:0 8px;vertical-align:1px}
+.fr-resto{width:fit-content;font-family:var(--display);font-weight:800;font-size:17px;text-transform:uppercase;letter-spacing:.03em;background:var(--soft);border:1px solid var(--line);border-radius:999px;padding:1px 10px}
 .fr-fogo .pc-num{font-size:46px}
 .fr-fogo .pc-head .total{font-family:var(--display);font-weight:800;font-size:22px}
-.fr-fogo .pc-head .cons,.fr-fogo .pc-head .pnome{font-size:18px;margin:0}
-.fr{display:flex;align-items:center;gap:12px;background:var(--soft);border-radius:10px;padding:0 12px}
-.fr .n{font-family:var(--display);font-weight:800;font-size:46px;line-height:1;min-width:30px;text-align:center;font-variant-numeric:tabular-nums}
-.fr .s{font-family:var(--display);font-weight:800;font-size:29px;text-transform:uppercase;line-height:1.05;min-width:0;overflow-wrap:anywhere}
+
+.fr{display:flex;align-items:center;gap:12px;background:var(--soft);border-radius:10px;padding:3px 12px}
+.fr .n{font-family:var(--display);font-weight:800;font-size:50px;line-height:1;min-width:30px;text-align:center;font-variant-numeric:tabular-nums}
+.fr .s{font-family:var(--display);font-weight:800;font-size:31px;text-transform:uppercase;line-height:1.05;min-width:0;overflow-wrap:anywhere}
 .fr-fogo .pc-estufa,.fr-fogo .nota-novos{margin-top:2px}
-.fr-fogo .fry-in{margin-top:3px;padding:12px;font-size:22px}
+.fr-fogo .fry-in{margin-top:auto;padding:14px;font-size:22px}
+/* celular: sabores maiores e mais espaço entre os pedidos */
+@media (max-width:600px){.fr-fogo{gap:16px}.fr-fogo .pcard{padding:12px 14px 14px;gap:8px}.fr-fogo .pc-num{font-size:60px}
+  .fr{padding:6px 14px;gap:14px}.fr .n{font-size:58px;min-width:34px}.fr .s{font-size:36px}.fr-sub{font-size:21px}.fr-fogo .fry-in{padding:18px;font-size:25px}}
 .fr-prox{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(420px,100%),1fr));gap:8px}
 .fr-mini{display:flex;gap:12px;align-items:baseline;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:6px 12px}
 .fr-mini.novo{border:3px solid var(--mostarda)}

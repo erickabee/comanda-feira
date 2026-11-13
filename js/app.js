@@ -224,7 +224,7 @@ function checkSom(list){
 const THEMES=[["auto","automático"],["light","claro"],["dark","escuro"]];
 let theme=ls.get("cf.tema","auto");
 function applyTheme(){const r=document.documentElement;if(theme==="auto")r.removeAttribute("data-theme");else r.setAttribute("data-theme",theme);
-  const t=THEMES.find(x=>x[0]===theme)||THEMES[0];$("#btnTheme").textContent="Tema: "+t[1];$("#btnTheme").setAttribute("aria-label","Tema "+t[1]+". Tocar para trocar")}
+  const t=THEMES.find(x=>x[0]===theme)||THEMES[0];$("#btnTheme").textContent="Tema: "+t[1];$("#btnTheme").setAttribute("aria-label","Tema "+t[1]+". Tocar para trocar");if(typeof rotulosTopo==="function")rotulosTopo()}
 $("#btnTheme").addEventListener("click",()=>{const i=THEMES.findIndex(x=>x[0]===theme);theme=THEMES[(i+1)%THEMES.length][0];ls.set("cf.tema",theme);applyTheme()});
 applyTheme();
 
@@ -233,17 +233,25 @@ applyTheme();
 const LETRAS=[["normal","normal",1],["grande","grande",1.18],["enorme","muito grande",1.36]];
 let letra=ls.get("cf.letra","normal");
 function applyLetra(){const l=LETRAS.find(x=>x[0]===letra)||LETRAS[0];document.documentElement.style.setProperty("--zoom",l[2]);
-  $("#btnLetra").textContent="Letra: "+l[1];$("#btnLetra").setAttribute("aria-label","Tamanho da letra: "+l[1]+". Tocar para trocar")}
+  $("#btnLetra").textContent="Letra: "+l[1];$("#btnLetra").setAttribute("aria-label","Tamanho da letra: "+l[1]+". Tocar para trocar");if(typeof rotulosTopo==="function")rotulosTopo()}
 $("#btnLetra").addEventListener("click",()=>{const i=LETRAS.findIndex(x=>x[0]===letra);letra=LETRAS[(i+1)%LETRAS.length][0];ls.set("cf.letra",letra);applyLetra()});
 applyLetra();
 
 /* ---------- aparelho preso numa aba ---------- */
 const PIN_NAMES={caixa:"Caixa",fritura:"Fritura",bandeja:"Bandeja",caldo:"Caldo"};
+/* no celular preso, os botões do topo ficam curtos (o nome completo continua para leitores de tela) */
+const topoCurto=()=>!!pinnedView&&innerWidth<=700;
+function rotulosTopo(){try{const c=topoCurto();document.body.classList.toggle("preso",!!pinnedView);
+  const t=THEMES.find(x=>x[0]===theme)||THEMES[0],l=LETRAS.find(x=>x[0]===letra)||LETRAS[0];
+  $("#btnTheme").textContent=c?"🌓":"Tema: "+t[1];$("#btnLetra").textContent=c?"Aa":"Letra: "+l[1];
+  if(pinnedView)$("#btnPinned").textContent=c?"🔒":`Só ${PIN_NAMES[pinnedView]} · Destravar`;
+  $("#btnPinned").setAttribute("aria-label",`Aparelho preso em ${PIN_NAMES[pinnedView]||""}. Tocar para destravar`)}catch(e){}}
+addEventListener("resize",()=>rotulosTopo());
 function renderChrome(){
   if(!PIN_NAMES[pinnedView])pinnedView="";
   $("#tabs").hidden=!!pinnedView;
   const b=$("#btnPinned");b.hidden=!pinnedView;
-  if(pinnedView)b.textContent=`Só ${PIN_NAMES[pinnedView]} · Destravar`;
+  if(pinnedView)b.textContent=`Só ${PIN_NAMES[pinnedView]} · Destravar`;rotulosTopo();
   document.querySelectorAll("#pinSel button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.pv===pinnedView));
   renderStation();
 }
@@ -784,34 +792,47 @@ const paraFritar=o=>o.novos&&sum(fritaveis(o.novos))?fritaveis(o.novos):fritavei
 let lastOleo=null;
 function renderFritura(){
   const all=pendingPastel(),list=all.filter(o=>!o.oleo),oil=all.filter(o=>o.oleo).sort((a,b)=>(b.oleoAt||0)-(a.oleoAt||0));
-  if(lastOleo&&!all.some(o=>o.id===lastOleo.id))lastOleo=null;
-  const undo=lastOleo?`<div class="undo"><span>Pedido ${pad(lastOleo.num)} foi para o óleo.</span><button type="button" data-desoleo="${esc(lastOleo.id)}">Desfazer</button></div>`:"";
+  if(lastOleo&&!lastOleo.ids.some(id=>all.some(o=>o.id===id)))lastOleo=null;
+  const undo=lastOleo?`<div class="undo"><span>Pedido ${pad(lastOleo.num)} foi para o óleo.</span><button type="button" data-desoleo="${esc(lastOleo.ids.join(","))}">Desfazer</button></div>`:"";
   const oilBox=oil.length?`<div class="oilbox"><div class="label">No óleo agora · ${oil.length} pedido${oil.length===1?"":"s"} (saem daqui quando a bandeja entregar)</div>${oil.map(o=>`<div class="oilrow"><span class="num">${pad(o.num)}</span><span class="it">${nomeTag(o)}${esc(fmtItems(fritaveis(o.pastel)))}</span><button type="button" data-desoleo="${esc(o.id)}">Voltar para a fila</button></div>`).join("")}</div>`:"";
   /* salgados da estufa: só para quem frita ver e ajudar a bandeja; não entram na fila do óleo */
   const naFila=new Set(list.map(o=>o.id)),soSalg=orders.filter(o=>!o.cancelado&&!o.pastelDone&&!naFila.has(o.id)&&estufaPend(o).length).sort(fila);
   const salgBox=soSalg.length?`<div class="frit-estufa"><div class="lbl">Salgados da estufa · ajude a bandeja</div>${soSalg.map(o=>`<div class="fe-row"><b>${pad(o.num)}</b><span>${nomeTag(o)}${esc(estufaPend(o).join(", "))}</span></div>`).join("")}</div>`:"";
   if(!list.length){$("#lots").innerHTML=undo+salgBox+`<div class="idle"><strong>Nenhum pastel para fritar</strong>${oil.length?"Tudo o que chegou já está no óleo.":"Quando o caixa registrar um pedido, ele aparece aqui."}</div>`+oilBox;return}
+  /* acréscimo da mesma ficha entra no cartão do pedido, como se tivesse sido pedido junto;
+     se o resto da ficha já foi para o óleo, aparece sozinho com "mais N na ficha · o resto já foi" */
+  const gm=new Map(),gs=[];
+  list.forEach(o=>{const k=o.acrescimo&&o.conta?o.conta:o.id;let x=gm.get(k);if(!x){x={l:[]};gm.set(k,x);gs.push(x)}x.l.push(o)});
+  gs.forEach(x=>{x.head=x.l.find(o=>!o.acrescimo)||x.l[0];x.fr={};x.l.forEach(o=>Object.entries(paraFritar(o)).forEach(([f,n])=>{x.fr[f]=(x.fr[f]||0)+(+n||0)}));
+    x.q=sum(x.fr);x.ids=x.l.map(o=>o.id).join(",");x.novo=x.l.some(ehNovo);x.resto=!x.l.some(o=>!o.acrescimo&&!(o.novos&&sum(o.novos)))});
   /* o que cabe no fogo agora (o pedido mais antigo sempre entra, mesmo se for maior que o fogo) e as próximas levas */
   let acc=0;const fogo=[],prox=[];
-  list.forEach(o=>{const q=sum(paraFritar(o));if(!prox.length&&(!fogo.length||acc+q<=cfg.capacity)){acc+=q;fogo.push(o)}else prox.push(o)});
+  gs.forEach(x=>{if(!prox.length&&(!fogo.length||acc+x.q<=cfg.capacity)){acc+=x.q;fogo.push(x)}else prox.push(x)});
   const pl=n=>n+" "+(n===1?"pastel":"pastéis");
-  const cards=fogo.map(o=>{const fr=paraFritar(o),q=sum(fr);
-    const rows=Object.entries(fr).filter(([,n])=>n>0).sort((a,b)=>b[1]-a[1]).map(([f,n])=>`<div class="fr"><span class="n">${n}</span><span class="s">${esc(f).replace(/\//g,"/<wbr>")}</span></div>`).join("");
-    return `<div class="pcard${ehNovo(o)?" novo":""}"><div class="pc-head"><span class="pc-num">${pad(o.num)}</span>${nomeTag(o)}${ehNovo(o)?'<span class="cons novo-tag">Novo</span>':""}${consTag(o)}${acTag(o)}<span class="total">${pl(q)}${q>cfg.capacity?' <span style="color:var(--warn)">· maior que o fogo</span>':""}</span></div>${rows}${estufaPend(o).length?`<div class="pc-estufa"><span class="lbl">Estufa</span>${esc(estufaPend(o).join(", "))}</div>`:""}${o.novos&&sum(o.novos)?'<div class="nota-novos">Só o que foi acrescentado. O resto deste pedido já foi para o óleo.</div>':""}<button type="button" class="fry-in" data-oleo="${esc(o.id)}">Coloquei no óleo</button></div>`}).join("");
-  const minis=prox.map(o=>{const fr=paraFritar(o);
-    return `<div class="fr-mini${ehNovo(o)?" novo":""}"><span class="num">${pad(o.num)}</span><span class="it">${Object.entries(fr).filter(([,n])=>n>0).sort((a,b)=>b[1]-a[1]).map(([f,n])=>`<b>${n}</b> ${esc(f).replace(/\//g,"/<wbr>")}`).join(" · ")}${nomeTag(o)} <span class="tg">${o.consumo==="viagem"?"Viagem":o.consumo==="parte"?"Parte viagem":o.consumo==="aqui"?"Comer aqui":""}</span></span></div>`}).join("");
-  const proxQ=prox.reduce((a,o)=>a+sum(paraFritar(o)),0);
-  $("#lots").innerHTML=undo+salgBox+`<div class="fr-sec">No fogo agora <small>${pl(acc)} de ${cfg.capacity}${list.length>1?` · ${list.length} na fila`:""}</small>${somOn&&somArmed()?'<button type="button" class="fr-som" data-somtoggle>🔔 Som ligado</button>':""}</div><div class="fr-fogo">${cards}</div>`
+  const ord=fr=>Object.entries(fr).filter(([,n])=>n>0).sort((a,b)=>b[1]-a[1]);
+  const consTxt=o=>({viagem:"Para viagem",parte:"Parte viagem",aqui:"Comer aqui"})[o.consumo]||"";
+  const sub=x=>{const o=x.head,nome=nomeDe(o);return [x.novo?'<span class="cons novo-tag">Novo</span>':"",nome?`<b>${esc(nome)}</b>`:"",esc(consTxt(o)),o.equipe?"Equipe":""].filter(Boolean).join(" · ").replace('</span> · ','</span> ')};
+  const restoTxt=x=>`Mais ${x.q} na ficha · o resto já foi`;
+  const estufa=x=>x.l.flatMap(estufaPend);
+  const cards=fogo.map(x=>`<div class="pcard fr-card${x.novo?" novo":""}"><div class="pc-head"><span class="pc-num">${pad(x.head.num)}</span><span class="total">${pl(x.q)}${x.q>cfg.capacity?' <span style="color:var(--warn)">· maior que o fogo</span>':""}</span></div>`
+    +`<div class="fr-sub">${sub(x)}</div>${x.resto?`<div class="fr-resto">${restoTxt(x)}</div>`:""}`
+    +ord(x.fr).map(([f,n])=>`<div class="fr"><span class="n">${n}</span><span class="s">${esc(f).replace(/\//g,"/<wbr>")}</span></div>`).join("")
+    +(estufa(x).length?`<div class="pc-estufa"><span class="lbl">Estufa</span>${esc(estufa(x).join(", "))}</div>`:"")
+    +`<button type="button" class="fry-in" data-oleo="${esc(x.ids)}">Coloquei no óleo</button></div>`).join("");
+  const minis=prox.map(x=>`<div class="fr-mini${x.novo?" novo":""}"><span class="num">${pad(x.head.num)}</span><span class="it">${ord(x.fr).map(([f,n])=>`<b>${n}</b> ${esc(f).replace(/\//g,"/<wbr>")}`).join(" · ")}${nomeTag(x.head)} <span class="tg">${x.resto?"mais na ficha":esc(consTxt(x.head))}</span></span></div>`).join("");
+  const proxQ=prox.reduce((a,x)=>a+x.q,0);
+  $("#lots").innerHTML=undo+salgBox+`<div class="fr-sec">No fogo agora <small>${pl(acc)} de ${cfg.capacity}${gs.length>1?` · ${gs.length} na fila`:""}</small>${somOn&&somArmed()?'<button type="button" class="fr-som" data-somtoggle>🔔 Som ligado</button>':""}</div><div class="fr-fogo">${cards}</div>`
     +(prox.length?`<div class="fr-sec">Próximas levas <small>${prox.length} pedido${prox.length===1?"":"s"} · ${pl(proxQ)}</small></div><div class="fr-prox">${minis}</div>`:"")+oilBox;
 }
+/* "Coloquei no óleo" vale para o cartão inteiro (o pedido e o acréscimo da mesma ficha) */
 document.addEventListener("click",async e=>{
   const b=e.target.closest("[data-oleo]");
-  if(b&&db){const o=orders.find(x=>x.id===b.dataset.oleo);if(!o)return;b.disabled=true;
-    try{await db.doc("orders/"+o.id).update({oleo:true,oleoAt:Date.now(),novos:null});lastOleo={id:o.id,num:o.num}}catch(err){b.disabled=false;toast("Não salvou. Toque de novo.")}
+  if(b&&db){const l=b.dataset.oleo.split(",").map(id=>orders.find(x=>x.id===id)).filter(Boolean);if(!l.length)return;b.disabled=true;
+    try{const t=Date.now();await Promise.all(l.map(o=>db.doc("orders/"+o.id).update({oleo:true,oleoAt:t,novos:null})));lastOleo={ids:l.map(o=>o.id),num:(l.find(o=>!o.acrescimo)||l[0]).num}}catch(err){b.disabled=false;toast("Não salvou. Toque de novo.")}
     render();return}
   const u=e.target.closest("[data-desoleo]");
-  if(u&&db){const o=orders.find(x=>x.id===u.dataset.desoleo);if(!o)return;u.disabled=true;
-    try{await db.doc("orders/"+o.id).update({oleo:false});if(lastOleo&&lastOleo.id===o.id)lastOleo=null}catch(err){u.disabled=false;toast("Não salvou. Toque de novo.")}
+  if(u&&db){const l=u.dataset.desoleo.split(",").map(id=>orders.find(x=>x.id===id)).filter(Boolean);if(!l.length)return;u.disabled=true;
+    try{await Promise.all(l.map(o=>db.doc("orders/"+o.id).update({oleo:false})));if(lastOleo&&l.some(o=>lastOleo.ids.includes(o.id)))lastOleo=null}catch(err){u.disabled=false;toast("Não salvou. Toque de novo.")}
     render()}
 });
 /* ---------- bandeja e caldo ---------- */
