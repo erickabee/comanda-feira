@@ -6,6 +6,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/fireba
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, collection, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, onSnapshot, query, where, runTransaction } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import { CARDAPIO_INICIAL } from "./cardapio-inicial.js";
+import { conferirVenda } from "./regras.js";
 
 const $=s=>document.querySelector(s);
 const msg=(t,err)=>{const m=$("#loginMsg");m.textContent=t;m.classList.toggle("err",!!err)};
@@ -24,7 +25,8 @@ const wrapQ=s=>({docs:s.docs.map(wrap)});
 function qApi(ref,cons){const q=()=>cons.length?query(ref,...cons):ref;return {
   where:(f,op,v)=>qApi(ref,[...cons,where(f,op,v)]),
   get:async()=>wrapQ(await getDocs(q())),
-  onSnapshot:(cb,err)=>onSnapshot(q(),s=>cb(wrapQ(s)),e=>err&&err(e)),
+  /* fromCache: os dados vieram só da memória do aparelho, sem falar com o servidor (a tela avisa se demorar) */
+  onSnapshot:(cb,err)=>onSnapshot(q(),{includeMetadataChanges:true},s=>cb({...wrapQ(s),fromCache:!!(s.metadata&&s.metadata.fromCache)}),e=>err&&err(e)),
   add:async d=>{try{const r=await addDoc(ref,d);return {id:r.id}}catch(e){throw mapErr(e)}}
 }}
 const db={
@@ -45,6 +47,22 @@ const db={
   newOrder:async(path,day,ord)=>{const c=doc(fs,path),r=doc(collection(fs,"orders"));
     try{return await runTransaction(fs,async tx=>{const s=await tx.get(c),d=s.exists()?s.data():{};const n=(+d.n||0)+1;
       tx.set(c,{...d,n,day});tx.set(r,{...ord,num:n});return n})}catch(e){throw mapErr(e)}},
+  /* venda conferida no servidor: na mesma transação lê o estoque do dia e o que já foi vendido
+     (campo "vend" no contador do dia), confere (regras.js) e grava o pedido. Se o sabor acabou, recusa a venda.
+     criar = pedido novo (numFixo: acréscimo que repete o número da ficha); id + patch = muda um pedido (editar, cancelar, desfazer) */
+  venda:async({day,feira,criar,numFixo,id,patch,vendLocal})=>{
+    const cRef=doc(fs,"counters",day),sRef=doc(fs,"stock",day),eRef=doc(fs,"config","estoque"),oRef=id?doc(fs,"orders",id):doc(collection(fs,"orders"));
+    try{return await runTransaction(fs,async tx=>{
+      const [cs,ss,es,os]=await Promise.all([tx.get(cRef),tx.get(sRef),tx.get(eRef),id?tx.get(oRef):Promise.resolve(null)]);
+      const c=cs.exists()?cs.data():{};
+      if(id&&!os.exists())throw Object.assign(new Error("pedido não existe"),{code:"not-found"});
+      const antes=id?os.data():null,depois=id?{...antes,...patch}:criar;
+      /* o dia que começou antes desta versão não tem "vend" no contador: parte do que o aparelho vê */
+      const vendidos=c.vend&&typeof c.vend==="object"?c.vend:((+c.n||0)>0?vendLocal:{});
+      const vend=conferirVenda({antes,depois,vendidos,estoqueDia:ss.exists()?ss.data():null,padroes:es.exists()?es.data():{},feira});
+      if(criar){const n=numFixo||(+c.n||0)+1;tx.set(cRef,{...c,n:numFixo?(+c.n||0):n,day,vend});tx.set(oRef,{...criar,num:n});return {n,id:oRef.id}}
+      tx.set(cRef,{...c,day,vend});tx.update(oRef,patch);return {id}
+    })}catch(e){throw mapErr(e)}},
   counter:async(path,day)=>{const r=doc(fs,path);
     try{return await runTransaction(fs,async tx=>{const s=await tx.get(r),d=s.exists()?s.data():{};const n=(+d.n||0)+1;
       tx.set(r,{...d,n,day});return n})}catch(e){throw mapErr(e)}}

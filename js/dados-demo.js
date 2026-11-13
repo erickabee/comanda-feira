@@ -49,7 +49,7 @@ export async function gerarDemo({ vazia = false } = {}) {
     { num: 7, t: min(18), caixa: "Esquerda", consumo: "aqui", pastel: { QUEIJO: 2 }, bebida: { "Coca Zero lata": 1 }, pago: false, cobrarNome: "Moço do boné azul", id: "demo-07" },
     { num: 7, t: min(9), caixa: "Esquerda", consumo: "aqui", pastel: { CARNE: 1 }, caldo: { "300 ml (copo) + Maracujá": 1 }, pago: false, cobrarNome: "Moço do boné azul", conta: "demo-07", acrescimo: true },
     { num: 8, t: min(12), caixa: "Direita", consumo: "viagem", caldo: { "1 Litro (garrafa) + Abacaxi": 1, "¹/2 Litro (garrafa)": 1 } },
-    { num: 9, t: min(6), caixa: "Direita", consumo: "viagem", pastel: { PALMITO: 1, "CARNE/OVO": 1, FRANGO: 2 } },
+    { num: 9, t: min(6), caixa: "Direita", consumo: "viagem", pastel: { PALMITO: 1, "CARNE/OVO": 1, FRANGO: 2 }, obs: "+ vinagrete, 1 para comer aqui" },
     { num: 10, t: min(2), caixa: "Esquerda", consumo: "aqui", pastel: { CARNE: 1, QUEIJO: 1 }, bebida: { Sprite: 1 } }
   ];
   if (!vazia) P.forEach((p, i) => {
@@ -58,12 +58,15 @@ export async function gerarDemo({ vazia = false } = {}) {
     const temP = Object.keys(o.pastel).length + Object.keys(o.bebida).length > 0, temC = Object.keys(o.caldo).length > 0;
     o.pastelDone = p.entregue || p.pastelDone || !temP; o.caldoDone = p.entregue || !temC;
     if (o.pastelDone && temP) o.pastelAt = p.t + 7 * 60000;
-    for (const k of ["pagamento", "pago", "cobrarNome", "conta", "acrescimo", "oleo", "ent", "cancelado"]) if (p[k] !== undefined) o[k] = p[k];
+    for (const k of ["pagamento", "pago", "cobrarNome", "conta", "acrescimo", "oleo", "ent", "cancelado", "obs"]) if (p[k] !== undefined) o[k] = p[k];
     if (p.oleo) o.oleoAt = agora - 3 * 60000;
     if (p.cancelado) o.canceladoAt = p.t + 60000;
     D["orders/" + (p.id || "demo-" + String(i + 1).padStart(2, "0") + (p.acrescimo ? "b" : ""))] = o;
   });
-  D["counters/" + dia] = { day: dia, n: vazia ? 0 : 10 };
+  /* o contador do dia guarda quantos de cada sabor já saíram: é com ele que o banco confere o estoque a cada venda */
+  const vend = {};
+  if (!vazia) P.forEach(p => { if (!p.cancelado) Object.entries(p.pastel || {}).forEach(([f, q]) => { vend[f] = (vend[f] || 0) + q }) });
+  D["counters/" + dia] = { day: dia, n: vazia ? 0 : 10, vend };
 
   /* dez semanas de feiras anteriores (terça, sexta e domingo), já fechadas como resumo do dia */
   const pesoP = { CARNE: 16, QUEIJO: 13, PIZZA: 11, FRANGO: 8, PALMITO: 4, "CARNE/QUEIJO": 12, "CARNE/OVO": 5, CALABRESA: 5, "CARNE/SECA": 5, BROCOLIS: 2, BACON: 1, PORTUGUESA: 3, "CAMARÃO": 2, "FRANGO/QUEIJO": 3, "3 QUEIJOS": 3, ESPECIAL: 4 };

@@ -3,6 +3,7 @@
    Os dados ficam no localStorage deste navegador. Abas abertas ao mesmo tempo conversam por BroadcastChannel,
    então dá para abrir o Caixa numa aba e a Fritura em outra e ver o pedido chegando, como na barraca. */
 import { gerarDemo, hoje } from "./dados-demo.js";
+import { conferirVenda } from "./regras.js";
 
 const CHAVE = "comanda-feira-demo-v1", CHAVE_RT = CHAVE + "-roteiro";
 let docs = new Map();
@@ -62,6 +63,17 @@ const db={
   /* número do pedido + pedido gravados juntos (as outras abas recebem a mudança na hora pelo canal) */
   newOrder:async(path,day,ord)=>{marcar(1);const d=docs.get(path)||{},n=(+d.n||0)+1,id=novoId();
     escrever(()=>{docs.set(path,{...d,n,day});docs.set("orders/"+id,{...clone(ord),num:n})});return n},
+  /* venda conferida contra o estoque, igual ao Firebase (ver conferirVenda em regras.js) */
+  venda:async({day,feira,criar,numFixo,id,patch,vendLocal})=>{
+    const cp="counters/"+day,c=docs.get(cp)||{};
+    if(id&&!docs.has("orders/"+id))throw Object.assign(new Error("Documento não existe"),{code:"not-found"});
+    const antes=id?docs.get("orders/"+id):null,depois=id?{...antes,...patch}:criar;
+    const vendidos=c.vend&&typeof c.vend==="object"?c.vend:((+c.n||0)>0?vendLocal:{});
+    const vend=conferirVenda({antes,depois,vendidos,estoqueDia:docs.get("stock/"+day)||null,padroes:docs.get("config/estoque")||{},feira});
+    if(criar){marcar(1);const n=numFixo||(+c.n||0)+1,oid=novoId();
+      escrever(()=>{docs.set(cp,{...c,n:numFixo?(+c.n||0):n,day,vend});docs.set("orders/"+oid,{...clone(criar),num:n})});return {n,id:oid}}
+    if(patch.ent||patch.pastelDone===true)marcar(3);
+    escrever(()=>{docs.set(cp,{...c,day,vend});docs.set("orders/"+id,{...antes,...clone(patch)})});return {id}},
   counter:async(path,day)=>{const d=docs.get(path)||{},n=(+d.n||0)+1;escrever(()=>docs.set(path,{...d,n,day}));return n}
 };
 

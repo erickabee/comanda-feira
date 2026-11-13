@@ -35,6 +35,7 @@
     <div class="top-r">
       <div class="status"><span class="dot" id="dot"></span><span id="statusTxt">Conectando…</span></div>
       <button type="button" class="hbtn" id="btnTheme">Tema: automático</button>
+      <button type="button" class="hbtn" id="btnLetra">Letra: normal</button>
       <button type="button" class="hbtn" id="btnPinned" hidden></button>
     </div>
   </div>
@@ -66,9 +67,9 @@
       <p class="rt-dica" id="rtDica"></p>
     </details>
   </div>
+  <div class="banner" id="atrasado" hidden><b>Sem conexão com o banco.</b> Os números deste aparelho podem estar atrasados. Confira a internet ou feche e abra o app.</div>
   <div class="banner" id="offline" hidden>Sistema fora do ar neste aparelho. Use o plano B: fichas de papel, caixa da esquerda com números ímpares e da direita com pares.</div>
 
-  <div class="novo-pedido" id="novoPedido" role="status" aria-live="assertive" hidden></div>
   <div class="station" id="station" hidden>
     <span id="stTxt"></span>
     <div class="st-r">
@@ -109,7 +110,7 @@
           <button data-c="Direita" aria-pressed="false">Caixa direita</button>
         </div>
       </div>
-      <div class="seq-r"><span class="muted" id="seqInfo"></span><button type="button" class="ghost cx-cancel" id="btnCancelar">Cancelar pedido</button></div>
+      <div class="seq-r"><span class="muted" id="seqInfo"></span><button type="button" class="ghost cx-hist" data-hist="1">Histórico de hoje</button><button type="button" class="ghost cx-cancel" id="btnCancelar">Editar ou cancelar</button></div>
     </div>
     <div class="caixa-grid">
       <div>
@@ -124,6 +125,7 @@
       <aside class="cart">
         <div class="label">Pedido atual</div>
         <div class="addbar" id="addBar" hidden><span id="addTxt"></span><button type="button" class="link" id="addCancel">Cancelar</button></div>
+        <div class="addbar editbar" id="editBar" hidden><span id="editTxt"></span><button type="button" class="link" id="editCancel">Cancelar edição</button></div>
         <ul id="cartList"></ul>
         <div class="tot"><span>Total</span><span id="cartTotal">R$ 0,00</span></div>
         <div class="troco" id="troco" hidden>
@@ -148,7 +150,9 @@
           <div class="opts" role="group" aria-labelledby="pagLbl">
             <button type="button" id="pagAgora" data-pag="agora" aria-pressed="true">Pago agora</button>
             <button type="button" id="pagDepois" data-pag="depois" aria-pressed="false">Cobrar depois</button>
+            <button type="button" id="pagEquipe" data-pag="equipe" aria-pressed="false">Equipe</button>
           </div>
+          <p class="hint" id="pagEquipeInfo" hidden style="margin:0">Para os funcionários: vai para a fritura e a bandeja e desconta do estoque, mas não entra no faturamento.</p>
           <input id="pagNome" class="pag-nome" type="text" autocomplete="off" maxlength="40" placeholder="Nome ou sinal do cliente (opcional)" aria-label="Nome do cliente para cobrar depois" hidden>
         </div>
         <div class="consumo" id="consumo" hidden>
@@ -157,6 +161,13 @@
             <button type="button" id="consAqui" data-cons="aqui" aria-pressed="false">Comer aqui</button>
             <button type="button" id="consViagem" data-cons="viagem" aria-pressed="false">Para viagem</button>
           </div>
+        </div>
+        <div class="consumo" id="obsBox" hidden>
+          <label class="label" for="obsTxt">Observação para a bandeja (opcional)</label>
+          <div class="obs-chips" id="obsChips">
+            <button type="button" data-obs="+ vinagrete">+ Vinagrete</button><button type="button" data-obs="+ maionese">+ Maionese</button><button type="button" data-obs="+ ketchup">+ Ketchup</button><button type="button" data-obs="1 para viagem">1 para viagem</button>
+          </div>
+          <input id="obsTxt" class="pag-nome" type="text" autocomplete="off" maxlength="120" placeholder="Ex.: 1 dos 3 é para viagem">
         </div>
         <button class="go" id="btnGo" disabled>Finalizar</button>
         <button class="link" id="btnClear" hidden>Limpar pedido</button>
@@ -173,6 +184,7 @@
   </section>
 
   <section id="v-bandeja" hidden>
+    <div class="band-top"><button type="button" class="ghost cx-hist" data-hist="1">Histórico de hoje</button></div>
     <div class="undo" id="undoBandeja" hidden></div>
     <div class="orders" id="listBandeja"></div>
   </section>
@@ -190,6 +202,10 @@
           <button type="button" data-fh="terca" aria-pressed="false">Terça</button><button type="button" data-fh="sexta" aria-pressed="false">Sexta</button><button type="button" data-fh="domingo" aria-pressed="false">Domingo</button>
         </div></div>
     </div>
+    <div class="est-lista" id="estAcoes"></div>
+    <details class="est-corrigir" id="estCorrigir">
+    <summary>Corrigir à mão quantos foram levados</summary>
+    <p class="hint" style="margin:6px 0 10px">Use só para acertar um número digitado errado. Quando chegarem mais pastéis, use "+ Repor"; para pastel que queimou ou caiu, use "− Perda".</p>
     <form id="stockForm">
       <div class="stock" id="stockList"></div>
       <div class="est-foot">
@@ -197,9 +213,10 @@
         <button class="ghost" type="button" id="stPadrao" hidden>Voltar para o padrão</button>
       </div>
     </form>
+    </details>
     <div class="reset" style="max-width:none">
       <h2>Estoque padrão de cada feira</h2>
-      <p class="hint" style="margin:0">Quantos pastéis de cada sabor vocês costumam montar em cada feira. Na terça, na sexta e no domingo o sistema já começa o dia com o padrão daquela feira. Só mexa em "Estoque de hoje" se montarem diferente ou para repor.</p>
+      <p class="hint" style="margin:0">Quantos pastéis de cada sabor vocês costumam levar para cada feira. Na terça, na sexta e no domingo o sistema já começa o dia com o padrão daquela feira. No dia, use "+ Repor" e "− Perda" em "Estoque de hoje".</p>
       <div class="seg" id="tplSel" role="group" aria-label="Escolher feira para editar o padrão">
         <button type="button" data-tp="terca" aria-pressed="false">Terça</button><button type="button" data-tp="sexta" aria-pressed="false">Sexta</button><button type="button" data-tp="domingo" aria-pressed="false">Domingo</button>
       </div>
@@ -282,7 +299,7 @@
     </div>
     <div class="reset">
       <h2>Zerar pedidos de hoje</h2>
-      <p class="hint" style="margin:0">Apaga todos os pedidos de hoje e volta a numeração para 001. Use depois de um teste ou para começar o dia do zero. O estoque montado continua salvo, e os sabores voltam a contar sem as vendas apagadas.</p>
+      <p class="hint" style="margin:0">Apaga todos os pedidos de hoje e volta a numeração para 001. Use depois de um teste ou para começar o dia do zero. O estoque do dia continua salvo, e os sabores voltam a contar sem as vendas apagadas.</p>
       <p class="muted" id="resetInfo" style="margin:0"></p>
       <button class="danger" id="btnReset" type="button">Zerar pedidos de hoje</button>
       <div class="confirm" id="resetConfirm" hidden>
@@ -298,7 +315,7 @@
 
 <div class="overlay" id="ov" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="ovNum">
-    <div class="label">Pedido registrado</div>
+    <div class="label" id="ovLbl">Pedido registrado</div>
     <div class="bignum" id="ovNum">000</div>
     <div class="ovtot" id="ovTot"></div>
     <div class="ovcons" id="ovCons"></div>
@@ -354,27 +371,64 @@
   </div>
 </div>
 <div class="overlay" id="ovCobrar" hidden>
-  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="cbTitle" style="text-align:left">
+  <div class="sheet split" role="dialog" aria-modal="true" aria-labelledby="cbTitle" style="text-align:left">
     <div class="sp-head"><h2 id="cbTitle" style="margin:0">Receber pedido</h2><span class="ovtot" id="cbTotal" style="font-size:30px"></span></div>
     <div id="cbItens" style="font-size:17px"></div>
-    <label class="label" for="cbRec">Pagou em dinheiro? Digite quanto o cliente deu</label>
-    <input id="cbRec" class="tr-input" type="text" inputmode="numeric" autocomplete="off" placeholder="R$ 0,00">
-    <div class="tr-row big" id="cbTroco"></div>
-    <div class="tr-how" id="cbHow"></div>
-    <div class="cb-foot">
-      <button type="button" class="go" id="cbDin">Recebido em dinheiro</button>
-      <button type="button" class="ghost" id="cbPix">Recebido no Pix ou cartão</button>
+    <div class="seg" id="cbModo" role="group" aria-label="Como cobrar">
+      <button type="button" data-cbm="junto" aria-pressed="true">Cobrar tudo junto</button><button type="button" data-cbm="dividir" aria-pressed="false">Dividir a conta</button>
     </div>
-    <button type="button" class="link" id="cbClose">Fechar sem receber</button>
+    <div id="cbJunto" class="cb-bloco">
+      <label class="label" for="cbRec">Pagou em dinheiro? Digite quanto o cliente deu</label>
+      <input id="cbRec" class="tr-input" type="text" inputmode="numeric" autocomplete="off" placeholder="R$ 0,00">
+      <div class="tr-row big" id="cbTroco"></div>
+      <div class="tr-how" id="cbHow"></div>
+      <div class="cb-foot">
+        <button type="button" class="go" id="cbDin">Recebido em dinheiro</button>
+        <button type="button" class="ghost" id="cbPix">Recebido no Pix ou cartão</button>
+      </div>
+    </div>
+    <div id="cbDiv" class="cb-bloco" hidden>
+      <div class="seg" id="cbDivModo" role="group" aria-label="Como dividir">
+        <button type="button" data-dm="igual" aria-pressed="true">Partes iguais</button><button type="button" data-dm="item" aria-pressed="false">Por item</button>
+      </div>
+      <div id="cbIgual" class="sp-step">
+        <span class="label">Pessoas</span>
+        <button type="button" class="navb" id="cbMenos" aria-label="Menos uma pessoa">−</button>
+        <b id="cbN" class="sp-n">2</b>
+        <button type="button" class="navb" id="cbMais" aria-label="Mais uma pessoa">+</button>
+      </div>
+      <div id="cbItem" hidden>
+        <div class="label" style="margin-bottom:6px">1. Escolha a pessoa · 2. Toque nos itens dela</div>
+        <p class="hint" style="margin:0 0 8px">Item dividido, como um caldo de 1 litro para dois? Toque nele com cada pessoa que vai dividir.</p>
+        <div class="chips" id="cbPessoas"></div>
+        <div class="units" id="cbUnits"></div>
+        <div class="sp-sem" id="cbSem"></div>
+      </div>
+      <p class="hint cb-trava" id="cbTrava" hidden>Alguém já pagou, então a divisão ficou travada. Para mudar, desfaça os pagamentos.</p>
+      <div class="label">Quanto cada um paga</div>
+      <div class="plist" id="cbLista"></div>
+    </div>
+    <button type="button" class="link" id="cbClose">Fechar</button>
   </div>
 </div>
 <div class="overlay" id="ovCancel" hidden>
   <div class="sheet cancel" role="dialog" aria-modal="true" aria-labelledby="cnTitle">
-    <div class="sp-head"><h2 id="cnTitle" style="margin:0">Cancelar pedido</h2><button type="button" class="link" id="cnClose">Fechar</button></div>
+    <div class="sp-head"><h2 id="cnTitle" style="margin:0">Editar ou cancelar pedido</h2><button type="button" class="link" id="cnClose">Fechar</button></div>
     <div class="undo" id="cnUndo" hidden></div>
     <label class="label" for="cnBusca">Número do pedido</label>
     <input id="cnBusca" class="tr-input" type="text" inputmode="numeric" autocomplete="off" placeholder="Ex.: 12" style="text-align:left">
     <div class="cn-list" id="cnList"></div>
+  </div>
+</div>
+<div class="overlay" id="ovHist" hidden>
+  <div class="sheet hist" role="dialog" aria-modal="true" aria-labelledby="hsTitle">
+    <div class="sp-head"><h2 id="hsTitle" style="margin:0">Histórico de hoje</h2><button type="button" class="link" id="hsClose">Fechar</button></div>
+    <input id="hsBusca" class="tr-input" type="search" autocomplete="off" placeholder="Número, sabor ou nome" aria-label="Buscar pedido por número, sabor ou nome" style="text-align:left;font-size:22px">
+    <div class="chips" id="hsFiltros" role="group" aria-label="Filtrar pedidos">
+      <button type="button" class="chip" data-hf="todos" aria-pressed="true">Todos</button><button type="button" class="chip" data-hf="fila" aria-pressed="false">Na fila</button><button type="button" class="chip" data-hf="entregue" aria-pressed="false">Entregues</button><button type="button" class="chip" data-hf="cobrar" aria-pressed="false">A cobrar</button><button type="button" class="chip" data-hf="equipe" aria-pressed="false">Equipe</button><button type="button" class="chip" data-hf="cancelado" aria-pressed="false">Cancelados</button>
+    </div>
+    <p class="hint" id="hsResumo" style="margin:0"></p>
+    <div class="hs-list" id="hsList"></div>
   </div>
 </div>
 <div class="toast" id="toast" hidden></div>

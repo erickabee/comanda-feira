@@ -1,7 +1,7 @@
 // Testes das regras de negócio (node --test). Não precisam de navegador nem de banco.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { brl, comoDevolver, dividirConta, fila, entSet, emptySum, addOrder, cashOf, trocoOf } from "../js/regras.js";
+import { brl, comoDevolver, dividirConta, fila, entSet, emptySum, addOrder, cashOf, trocoOf, conferirVenda } from "../js/regras.js";
 
 test("brl formata em reais, com milhar e centavos", () => {
   assert.equal(brl(11.5), "R$ 11,50");
@@ -66,4 +66,34 @@ test("dinheiro e troco de conta dividida somam só quem pagou em dinheiro", () =
   const o = { total: 30, pagamento: { tipo: "dividido", partes: [{ valor: 15, recebido: 20, troco: 5 }, { valor: 15 }] } };
   assert.equal(cashOf(o), 15);
   assert.equal(trocoOf(o), 5);
+});
+
+test("conferirVenda: recusa quando o outro caixa já vendeu o último, mesmo com o aparelho atrasado", () => {
+  const estoqueDia = { feira: "domingo", counts: { CARNE: 3, QUEIJO: 5 }, perdas: { CARNE: 1 } };
+  // 3 levados − 1 perda = 2 para vender; já saíram 2
+  assert.throws(() => conferirVenda({ antes: null, depois: { pastel: { CARNE: 1 } }, vendidos: { CARNE: 2 }, estoqueDia }),
+    e => e.code === "sem-estoque" && e.sabor === "CARNE" && e.restam === 0);
+  assert.deepEqual(conferirVenda({ antes: null, depois: { pastel: { CARNE: 1, QUEIJO: 2 } }, vendidos: { CARNE: 1 }, estoqueDia }), { CARNE: 2, QUEIJO: 2 });
+  // sabor sem controle de estoque passa sempre
+  assert.deepEqual(conferirVenda({ antes: null, depois: { pastel: { PIZZA: 40 } }, vendidos: {}, estoqueDia }), { PIZZA: 40 });
+});
+
+test("conferirVenda: cancelar devolve, editar confere só o que aumentou, e sem ajuste do dia usa o padrão da feira", () => {
+  const ped = { pastel: { CARNE: 2 } }, padroes = { terca: { CARNE: 2 } };
+  assert.deepEqual(conferirVenda({ antes: ped, depois: { ...ped, cancelado: true }, vendidos: { CARNE: 2 }, padroes, feira: "terca" }), { CARNE: 0 });
+  assert.deepEqual(conferirVenda({ antes: ped, depois: { pastel: { CARNE: 1, QUEIJO: 1 } }, vendidos: { CARNE: 2 }, padroes, feira: "terca" }), { CARNE: 1, QUEIJO: 1 });
+  assert.throws(() => conferirVenda({ antes: ped, depois: { pastel: { CARNE: 3 } }, vendidos: { CARNE: 2 }, padroes, feira: "terca" }), e => e.restam === 0);
+});
+
+test("addOrder: equipe fica fora do faturamento e o valor é separado em pastel, caldo e bebida", () => {
+  const preco = (k, f) => ({ pastel: 12, caldo: 9, bebida: 7 })[k];
+  const s = emptySum("2026-11-13");
+  addOrder(s, { total: 40, pastel: { CARNE: 2 }, caldo: { "300 ml (copo) + Limão": 1 }, bebida: { "Coca lata": 1 } }, preco);
+  addOrder(s, { total: 0, equipe: true, valorEquipe: 12, pastel: { QUEIJO: 1 } }, preco);
+  assert.equal(s.total, 40);
+  assert.equal(s.orders, 1);
+  assert.deepEqual(s.valor, { pastel: 24, caldo: 9, bebida: 7 });
+  assert.equal(s.equipe, 1);
+  assert.equal(s.equipeValor, 12);
+  assert.deepEqual(s.equipeItens, { QUEIJO: 1 });
 });

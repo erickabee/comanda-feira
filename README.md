@@ -1,6 +1,6 @@
 # Comanda da Feira · C&G Pastéis
 
-Sistema de comandas em tempo real para uma barraca de pastel e caldo de cana em feira livre. Os dois caixas lançam os pedidos no celular, e cada posto (fritura, bandeja e caldo) recebe na hora, no seu tablet, só a parte que é dele. Inclui estoque por feira, contas a cobrar, cancelamento e relatórios para o gerente.
+Sistema de comandas em tempo real para uma barraca de pastel e caldo de cana em feira livre. Os dois caixas lançam os pedidos no celular, e cada posto (fritura, bandeja e caldo) recebe na hora, no seu tablet, só a parte que é dele. Inclui estoque por feira conferido no servidor, contas a cobrar, observação do pedido, edição, cancelamento e relatórios para o gerente.
 
 **▶ [Abrir a demonstração](https://erickabee.github.io/comanda-feira/)**: abre direto, sem login, com uma feira de exemplo acontecendo. Um **roteiro de 1 minuto** guia pelos quatro postos (caixa → fritura → bandeja → gerente) e marca cada passo sozinho conforme você usa. Para ver o tempo real, abra o link em duas abas (o Caixa numa e a Fritura na outra) e faça um pedido. Se quiser testar do zero, use **"Começar com a feira vazia"**. A senha do gerente na demonstração é **1234**.
 
@@ -28,23 +28,25 @@ A barraca trabalha com dois caixas, uma pessoa fritando, uma na bandeja (que ent
 
 | Posto | O que tem |
 |---|---|
-| **Caixa** | Cardápio em botões (1 toque = 1 pastel), sabores de caldo combináveis, aviso de sabor acabando, "comer aqui ou viagem", troco com sugestão de notas, divisão da conta (partes iguais ou por item), **cobrar depois** com acréscimos na mesma ficha e cancelamento com desfazer. |
-| **Fritura** | Um quadro por pedido, na ordem de chegada, com a marca de "fogo cheio" pela capacidade do óleo. Botão **"Coloquei no óleo"** e lista do que já está fritando. Sino a cada pedido novo e faixa "PEDIDO NOVO" na tela. |
-| **Bandeja** | **Contador por sabor** ("CARNE 2/3"): mostra o que falta entregar, e o pedido sai sozinho quando tudo foi entregue. Mostra se o pedido ainda está "esperando fritar" ou já está "no óleo". |
+| **Caixa** | Cardápio em botões (1 toque = 1 pastel), sabores de caldo combináveis, aviso de sabor acabando, "comer aqui ou viagem", troco com sugestão de notas, divisão da conta (partes iguais ou por item). **Observação do pedido** com botões rápidos (+ vinagrete, + maionese, + ketchup, 1 para viagem) ou texto livre. **Cobrar depois** com nome do cliente, acréscimos na mesma ficha e divisão na hora de receber. Pedido da **equipe** (vai para a produção e desconta do estoque, mas não entra no faturamento). **Editar** e cancelar pedido, com desfazer, e **histórico do dia** com busca. |
+| **Fritura** | Um quadro por pedido, na ordem de chegada, com a marca de "fogo cheio" pela capacidade do óleo. Botão **"Coloquei no óleo"** e lista do que já está fritando. Sino a cada pedido novo, que chega destacado. Num pedido editado, mostra só o que foi acrescentado. |
+| **Bandeja** | **Contador por sabor** ("CARNE 2/3"): mostra o que falta entregar, e o pedido sai sozinho quando tudo foi entregue. Mostra se o pedido ainda está "esperando fritar" ou já está "no óleo", o **nome do cliente** ao lado do número, a **observação** numa faixa amarela, as bebidas numa faixa azul e os salgados da estufa à parte. Pedido que não depende da fritura sobe para o topo. |
 | **Caldo** | Cada copo ou garrafa numa linha, com tamanho, quantidade e sabores separados. |
-| **Estoque** | Estoque padrão de cada feira (terça, sexta e domingo) que já vale no dia, com ajuste do dia e reposição. Desconta sozinho a cada venda. |
-| **Gerente** | Faturamento do dia, da semana e do mês, comparação com o período anterior, sabores mais vendidos, dinheiro × Pix, valor por caixa, cancelados, contas em aberto e conferência da gaveta. |
-| **Ajustes** | Cardápio e preços, capacidade da fritura, senha do gerente e "prender" o tablet num posto. |
+| **Estoque** | Estoque padrão de cada feira (terça, sexta e domingo) que já vale no dia, com ajuste do dia, **+ Repor** e **− Perda**. Desconta sozinho a cada venda, e o **banco recusa a venda** de um sabor que acabou, mesmo que o celular de um caixa esteja atrasado. |
+| **Gerente** | Faturamento do dia, da semana e do mês, comparação com o período anterior, **faturamento por tipo** (pastel, caldo e bebida), sabores mais vendidos, dinheiro × Pix, valor por caixa, consumo da equipe, cancelados, contas em aberto e conferência da gaveta. |
+| **Ajustes** | Cardápio e preços, salgados da estufa, capacidade da fritura, senha do gerente e "prender" o tablet num posto. Cada aparelho escolhe o tamanho da letra. |
 
 Funciona em **iPhone, Android, iPad e tablets**, porque é um site que pode ser adicionado à tela inicial. Tem tema claro e escuro, e a tela fica sempre acesa nos postos.
 
 ## Em uso de verdade
 
-O sistema roda na barraca da C&G Pastéis desde outubro de 2026, nas feiras de terça, sexta e domingo, com dois caixas e os tablets dos postos ligados ao mesmo tempo. A maior feira registrada até agora teve 228 pedidos num dia. A maior parte das funções nasceu de pedidos feitos durante a feira: o contador por sabor na bandeja, o "coloquei no óleo", as contas a cobrar e a troca do bip por um sino menos cansativo.
+O sistema roda na barraca da C&G Pastéis desde outubro de 2026, nas feiras de terça, sexta e domingo, com dois caixas e os tablets dos postos ligados ao mesmo tempo. A maior feira registrada até agora teve 357 pedidos num dia. A maior parte das funções nasceu de pedidos feitos durante a feira: o contador por sabor na bandeja, o "coloquei no óleo", as contas a cobrar, o nome do cliente e a observação para a bandeja, e a troca do bip por um sino menos cansativo.
 
 ## Decisões técnicas
 
 **Dois caixas nunca recebem o mesmo número.** O número do pedido sai de uma transação no contador do dia, e o próprio pedido é gravado **na mesma transação**. Isso reduziu de três para duas as idas e vindas ao servidor ao finalizar (ler o contador e gravar tudo de uma vez), o que faz diferença no 4G da feira.
+
+**O estoque é conferido no servidor, não no celular.** Um bug real: num domingo de feira cheia, um sabor já tinha acabado na tela de um caixa, mas o celular do outro caixa estava com os números atrasados (internet fraca, app em segundo plano) e continuava vendendo. Hoje o contador do dia guarda quantos de cada sabor já saíram, e a venda é conferida **dentro da mesma transação** que grava o pedido, lendo o estoque e os vendidos no servidor. Se acabou, a venda é recusada e o caixa vê qual sabor tirar do pedido. Editar, cancelar e desfazer passam pela mesma conferência (veja `conferirVenda` em [`js/regras.js`](js/regras.js)). E se um aparelho ficar mais de alguns segundos sem falar com o servidor, aparece uma faixa avisando que os números dele podem estar atrasados.
 
 **A fila segue o número do pedido, não o relógio do celular.** Um bug real: o celular de um dos caixas estava 5 minutos atrasado, e os pedidos do outro caixa iam parar no fim da fila da fritura. Hoje a ordem vem do número, que é dado pelo servidor (veja `fila` em [`js/regras.js`](js/regras.js)).
 
@@ -85,7 +87,7 @@ Simulei uma feira cheia no Firebase de verdade, com 5 telas acompanhando e 2 cai
 index.html              telas (marcação)
 css/estilos.css         estilos, temas claro e escuro, ajustes de celular e tablet
 js/app.js               funcionamento das telas: caixa, fritura, bandeja, caldo, estoque, gerente
-js/regras.js            regras de negócio puras: troco, divisão de conta, fila, resumo do dia
+js/regras.js            regras de negócio puras: troco, divisão de conta, fila, resumo do dia, conferência do estoque
 js/banco.js             escolhe Firebase ou demonstração
 js/banco-firebase.js    login da barraca e Firestore
 js/banco-demo.js        banco no navegador para a demonstração

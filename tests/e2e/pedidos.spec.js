@@ -26,7 +26,8 @@ test("pedido feito numa aba chega na outra, como entre o caixa e a fritura", asy
   await abrir(fritura, "fritura");
   const n = await fazerPedido(caixa, { pasteis: ["PIZZA"] });
   await expect(fritura.locator("#lots .pcard", { hasText: n })).toBeVisible();
-  await expect(fritura.locator("#novoPedido")).toHaveText(`PEDIDO NOVO · ${n}`);
+  // o quadro do pedido que acabou de chegar fica destacado, com a etiqueta "Novo"
+  await expect(fritura.locator("#lots .pcard.novo", { hasText: n }).locator(".novo-tag")).toBeVisible();
 });
 
 test("quem frita marca 'Coloquei no óleo' e pode desfazer", async ({ page }) => {
