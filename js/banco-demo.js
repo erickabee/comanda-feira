@@ -2,7 +2,7 @@
    (doc/collection/where/onSnapshot/newOrder), então as telas funcionam sem saber a diferença.
    Os dados ficam no localStorage deste navegador. Abas abertas ao mesmo tempo conversam por BroadcastChannel,
    então dá para abrir o Caixa numa aba e a Fritura em outra e ver o pedido chegando, como na barraca. */
-import { gerarDemo, hoje } from "./dados-demo.js";
+import { gerarDemo, hoje, VERSAO_EXEMPLO } from "./dados-demo.js";
 import { conferirVenda } from "./regras.js";
 
 const CHAVE = "comanda-feira-demo-v1", CHAVE_RT = CHAVE + "-roteiro";
@@ -15,7 +15,7 @@ function carregar(){
   catch(e){return null}
 }
 function salvar(){
-  try{localStorage.setItem(CHAVE,JSON.stringify({dia:hoje(),docs:Object.fromEntries(docs)}))}catch(e){}
+  try{localStorage.setItem(CHAVE,JSON.stringify({dia:hoje(),versao:VERSAO_EXEMPLO,docs:Object.fromEntries(docs)}))}catch(e){}
 }
 function avisar(){ouvintes.forEach(f=>{try{f()}catch(e){console.error(e)}})}
 /* as abas mandam os dados junto na mensagem (o localStorage demora a aparecer nas outras abas) */
@@ -97,8 +97,8 @@ function renderRoteiro(){const f=feitos();document.querySelectorAll("#roteiro li
 
 export async function conectarDemo(){
   const salvo=carregar();
-  /* exemplo novo a cada dia, para o visitante sempre ver uma feira "acontecendo hoje" */
-  if(!salvo||salvo.dia!==hoje()||!docs.has("config/barraca"))await restaurar();
+  /* exemplo novo a cada dia (para o visitante sempre ver uma feira "acontecendo hoje") e quando o exemplo muda */
+  if(!salvo||salvo.dia!==hoje()||salvo.versao!==VERSAO_EXEMPLO||!docs.has("config/barraca"))await restaurar();
   const $=s=>document.querySelector(s);
   const bar=$("#demoBar");if(bar)bar.hidden=false;
   const r=$("#demoReset");if(r)r.addEventListener("click",async()=>{await restaurar();location.reload()});

@@ -4,6 +4,8 @@
 import { CARDAPIO_INICIAL as C } from "./cardapio-inicial.js";
 
 export const PIN_DEMO = "1234";
+/* sobe quando o exemplo muda, para quem já abriu a demonstração ver o exemplo novo na hora */
+export const VERSAO_EXEMPLO = 3;
 export const hoje = (d = new Date()) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
 
 const preco = (lista, nome) => { const it = lista.find(x => x.n === nome.split(" + ")[0]); return it ? it.p : 0 };

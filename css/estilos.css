@@ -286,6 +286,9 @@ h2{font-family:var(--display);font-weight:800;text-transform:uppercase;letter-sp
 /* nome do cliente (a cobrar ou equipe) ao lado do número, para a bandeja não esquecer de quem é */
 .pnome{display:inline-block;font-family:var(--display);font-weight:800;font-size:24px;line-height:1.15;text-transform:uppercase;letter-spacing:.02em;background:var(--fg);color:var(--bg);border-radius:8px;padding:3px 10px;max-width:100%;overflow-wrap:anywhere;vertical-align:middle}
 .ord .pnome{display:block;width:fit-content;margin-bottom:6px;font-size:26px}
+/* total do pedido embaixo do número, na bandeja: para conferir pedido grande sem contar */
+.ord .num .ptot{display:block;font-size:22px;line-height:1.1;letter-spacing:.02em;text-transform:uppercase;margin-top:4px;white-space:nowrap}
+.ord .num .ptot.sub{font-size:17px;color:var(--muted);margin-top:2px}
 .oilrow .pnome,.fe-row .pnome{font-size:16px;padding:1px 8px;margin-right:6px}
 .pc-num{font-family:var(--display);font-weight:800;font-size:44px;line-height:1;font-variant-numeric:tabular-nums}
 .fogo-cheio{display:flex;flex-direction:column;align-items:center;gap:2px;margin:6px 0 16px;padding:10px;border-top:3px dashed var(--fg);border-bottom:3px dashed var(--fg);text-align:center}

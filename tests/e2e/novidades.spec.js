@@ -84,3 +84,20 @@ test("parte viagem: o caixa marca o que vai para viagem e a bandeja vê numa fai
   await expect(card.locator(".cons.parte")).toHaveText("Parte viagem");
   await expect(card.locator(".viagem-faixa")).toContainText("1× carne, 1× coca lata");
 });
+
+test("a bandeja mostra o total de pastéis embaixo do número", async ({ page }) => {
+  await abrir(page);
+  const n = await fazerPedido(page, { pasteis: ["CARNE", "CARNE", "QUEIJO", "PIZZA"], bebidas: ["Guaraná"] });
+  await irPara(page, "bandeja");
+  const num = page.locator("#listBandeja .ord", { hasText: n }).locator(".num");
+  await expect(num.locator(".ptot").first()).toHaveText("4 pastéis");
+  await expect(num.locator(".ptot.sub")).toHaveText("+ 1 bebida");
+});
+
+test("quem abriu a demonstração antes de o exemplo mudar recebe o exemplo novo", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() => { const k = "comanda-feira-demo-v1", o = JSON.parse(localStorage.getItem(k)); o.versao = 1; o.docs["orders/velho"] = { num: 99, day: o.dia, pastel: { CARNE: 1 }, caldo: {}, bebida: {} }; localStorage.setItem(k, JSON.stringify(o)) });
+  await page.reload();
+  await expect(page.locator("#statusTxt")).toHaveText("Conectado");
+  expect(await page.evaluate(() => !!JSON.parse(localStorage.getItem("comanda-feira-demo-v1")).docs["orders/velho"])).toBe(false);
+});

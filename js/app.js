@@ -788,6 +788,10 @@ const lastUndo={bandeja:null,caldo:null};
 const entKey=(k,f)=>(k==="bebida"?"b|":"p|")+f;
 /* ordem fixa = ordem do cardápio (o banco não guarda a ordem dos sabores, então sem isso os quadradinhos trocam de lugar) */
 const menuPos=(k,f)=>{const i=(cfg[k]||[]).findIndex(x=>x.n===f);return i<0?999:i};
+/* total de pastéis do pedido (e salgados da estufa e bebidas, em linhas menores) */
+function totalTag(o){const st=estufaSet();let p=0,sg=0;Object.entries(o.pastel||{}).forEach(([f,q])=>{if(st.has(f))sg+=+q||0;else p+=+q||0});const b=sum(o.bebida);
+  const pl=(n,a,b)=>n+" "+(n===1?a:b);
+  return (p?`<span class="ptot">${pl(p,"pastel","pastéis")}</span>`:"")+(sg?`<span class="ptot sub">+ ${pl(sg,"salgado","salgados")}</span>`:"")+(b?`<span class="ptot sub">+ ${pl(b,"bebida","bebidas")}</span>`:"")}
 function entUnits(o){const ent=o.ent||{},u=[];
   [["pastel",o.pastel],["bebida",o.bebida]].forEach(([k,obj])=>Object.entries(obj||{}).sort((a,b)=>menuPos(k,a[0])-menuPos(k,b[0])||a[0].localeCompare(b[0])).forEach(([f,q])=>{q=+q||0;if(q>0){const key=entKey(k,f),on=entSet(ent[key],q);u.push({k,f,q,key,on,d:on.size})}}));
   return u}
@@ -833,7 +837,7 @@ function renderList(kind){
   const naoEspera=o=>isP&&!sum(fritaveis(o.pastel));
   const list=orders.filter(o=>!o[doneF]&&has(o)).sort((a,b)=>(naoEspera(b)-naoEspera(a))||fila(a,b));
   const el=$(isP?"#listBandeja":"#listCaldo");
-  el.innerHTML=list.length?list.map(o=>`<div class="ord"><span class="num">${pad(o.num)}</span><div class="items">${nomeTag(o)}${naoEspera(o)?'<span class="st ready">pronto para entregar</span>':""}${isP&&sum(fritaveis(o.pastel))>0?(o.oleo?'<span class="st oil">no óleo</span>':'<span class="st wait">esperando fritar</span>'):""}${consTag(o)?consTag(o)+" ":""}${acTag(o)}${o.pago===false?'<span class="cons acobrar">A cobrar</span> ':""}${viagemTag(o,isP?["pastel","bebida"]:["caldo"])}${obsTag(o)}${isP?unitsBlock(o):caldoBlock(o)}<div class="meta">Caixa ${esc(o.caixa||"")}</div></div><button class="done" data-done="${kind}" data-id="${esc(o.id)}">Entregue</button></div>`).join("")
+  el.innerHTML=list.length?list.map(o=>`<div class="ord"><span class="num">${pad(o.num)}${isP?totalTag(o):""}</span><div class="items">${nomeTag(o)}${naoEspera(o)?'<span class="st ready">pronto para entregar</span>':""}${isP&&sum(fritaveis(o.pastel))>0?(o.oleo?'<span class="st oil">no óleo</span>':'<span class="st wait">esperando fritar</span>'):""}${consTag(o)?consTag(o)+" ":""}${acTag(o)}${o.pago===false?'<span class="cons acobrar">A cobrar</span> ':""}${viagemTag(o,isP?["pastel","bebida"]:["caldo"])}${obsTag(o)}${isP?unitsBlock(o):caldoBlock(o)}<div class="meta">Caixa ${esc(o.caixa||"")}</div></div><button class="done" data-done="${kind}" data-id="${esc(o.id)}">Entregue</button></div>`).join("")
     :`<div class="idle"><strong>Tudo entregue</strong>${isP?"Os pedidos de pastel e bebida aparecem aqui na ordem em que foram feitos.":"Os pedidos de caldo aparecem aqui na ordem em que foram feitos."}</div>`;
   const u=$(isP?"#undoBandeja":"#undoCaldo"), last=lastUndo[kind];
   u.hidden=!last; if(last)u.innerHTML=`<span>Pedido ${pad(last.num)} marcado como entregue.</span><button data-undo="${kind}">Desfazer</button>`;
