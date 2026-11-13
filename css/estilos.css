@@ -488,6 +488,33 @@ main,.overlay .sheet,.cxbar{zoom:var(--zoom,1)}
 .hs-tempo b{font-variant-numeric:tabular-nums}
 .hs-mais{align-self:center;margin-top:4px}
 .hs-pag{margin:0;padding:4px 12px 10px;font-weight:700}
+/* Fritura (opção B): em cima, os pedidos que cabem no fogo agora, um sabor por linha, lado a lado quando cabe;
+   embaixo, as próximas levas numa linha cada. Só rola para baixo, nunca para o lado. */
+.fr-sec{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;font-family:var(--display);font-weight:800;font-size:22px;text-transform:uppercase;letter-spacing:.03em;margin:2px 2px 8px}
+.fr-sec small{font-size:18px;color:var(--muted)}
+.fr-fogo{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:10px;align-items:start;margin-bottom:16px}
+.fr-fogo .pcard{margin:0;display:flex;flex-direction:column;gap:5px;padding:8px 12px 10px}
+.fr-fogo .pc-head{margin:0;align-items:center;gap:6px 8px;justify-content:flex-start}
+.fr-fogo .pc-head .total{margin-left:auto}
+.fr-fogo .pc-num{font-size:46px}
+.fr-fogo .pc-head .total{font-family:var(--display);font-weight:800;font-size:22px}
+.fr-fogo .pc-head .cons,.fr-fogo .pc-head .pnome{font-size:18px;margin:0}
+.fr{display:flex;align-items:center;gap:12px;background:var(--soft);border-radius:10px;padding:0 12px}
+.fr .n{font-family:var(--display);font-weight:800;font-size:46px;line-height:1;min-width:30px;text-align:center;font-variant-numeric:tabular-nums}
+.fr .s{font-family:var(--display);font-weight:800;font-size:29px;text-transform:uppercase;line-height:1.05;min-width:0;overflow-wrap:anywhere}
+.fr-fogo .pc-estufa,.fr-fogo .nota-novos{margin-top:2px}
+.fr-fogo .fry-in{margin-top:3px;padding:12px;font-size:22px}
+.fr-prox{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(420px,100%),1fr));gap:8px}
+.fr-mini{display:flex;gap:12px;align-items:baseline;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:6px 12px}
+.fr-mini.novo{border:3px solid var(--mostarda)}
+.fr-mini .num{font-family:var(--display);font-weight:800;font-size:34px;line-height:1;color:var(--muted);font-variant-numeric:tabular-nums}
+.fr-mini .it{font-family:var(--display);font-weight:800;font-size:25px;text-transform:uppercase;line-height:1.15;min-width:0;overflow-wrap:anywhere}
+.fr-mini .it b{font-size:30px}
+.fr-mini .tg{font-family:var(--display);font-weight:700;font-size:17px;color:var(--muted);text-transform:uppercase;white-space:nowrap}
+.fr-mini .pnome{font-size:16px;padding:1px 8px;margin-left:4px}
+/* caixa do som: depois de ligado vira só um botão pequeno, para sobrar tela para os pedidos */
+.station.min{display:none}
+.fr-som{margin-left:auto;border-radius:999px;border:2px solid var(--line);background:var(--surface);color:var(--fg);font-family:var(--body);font-weight:700;font-size:14px;padding:4px 10px;min-height:36px;text-transform:none;letter-spacing:0}
 .nota-novos{margin-top:10px;font-weight:700;color:var(--muted)}
 .cn-b{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .cn-row .ed{border-radius:10px;padding:10px 12px;font-weight:700;border:2px solid var(--line);background:var(--surface);color:var(--fg);min-height:44px}

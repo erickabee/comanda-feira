@@ -198,10 +198,14 @@ function renderStation(){
   const b=$("#btnSom");
   if(!somOn){b.textContent="Som desligado · ligar";b.className="sbtn"}
   else if(!somArmed()){b.textContent="Tocar aqui para ativar o som";b.className="sbtn arm"}
-  else{b.textContent="Som ligado · desligar";b.className="sbtn on"}
+  else{b.textContent="🔔 Som ligado · desligar";b.className="sbtn on"}
+  st.classList.toggle("min",somOn&&somArmed()&&Date.now()-somAberto>20000);
   $("#stTxt").textContent=somOn?"Toca a cada pedido novo de pastel, e o pedido novo fica destacado na fila. Deixe o volume do aparelho no máximo.":"Sem som neste aparelho. O pedido novo continua destacado na fila.";
   document.querySelectorAll("#somTipo [data-st]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.st===somTipo));$("#somTipo").hidden=!somOn;
 }
+/* o botãozinho "Som ligado" da fritura reabre a caixa do som (para trocar o tipo ou desligar) */
+document.addEventListener("click",e=>{if(!e.target.closest("[data-somtoggle]"))return;$("#station").classList.remove("min");somAberto=Date.now();setTimeout(renderStation,20500)});
+let somAberto=0;
 $("#btnSom").addEventListener("click",()=>{
   if(somOn&&!somArmed()){armSom(true);setTimeout(()=>{if(!alarmOk)somWebAudio();renderStation()},250);return}
   somOn=!somOn;ls.set("cf.som",somOn?"1":"0");if(somOn){armSom(true);setTimeout(()=>{if(!alarmOk)somWebAudio();renderStation()},250)}else if(alarmEl){try{alarmEl.pause()}catch(e){}}renderStation()});
@@ -787,16 +791,18 @@ function renderFritura(){
   const naFila=new Set(list.map(o=>o.id)),soSalg=orders.filter(o=>!o.cancelado&&!o.pastelDone&&!naFila.has(o.id)&&estufaPend(o).length).sort(fila);
   const salgBox=soSalg.length?`<div class="frit-estufa"><div class="lbl">Salgados da estufa · ajude a bandeja</div>${soSalg.map(o=>`<div class="fe-row"><b>${pad(o.num)}</b><span>${nomeTag(o)}${esc(estufaPend(o).join(", "))}</span></div>`).join("")}</div>`:"";
   if(!list.length){$("#lots").innerHTML=undo+salgBox+`<div class="idle"><strong>Nenhum pastel para fritar</strong>${oil.length?"Tudo o que chegou já está no óleo.":"Quando o caixa registrar um pedido, ele aparece aqui."}</div>`+oilBox;return}
-  let acc=0,cut=false,html="";
-  list.forEach((o,i)=>{
-    const fr=paraFritar(o),q=sum(fr);
-    if(!cut&&i>0&&acc+q>cfg.capacity){cut=true;html+=`<div class="fogo-cheio"><span>Fogo cheio · ${acc} de ${cfg.capacity}</span><small>Os pedidos abaixo vão na próxima leva</small></div>`}
-    if(!cut)acc+=q;
-    const items=Object.entries(fr).filter(([,n])=>n>0).sort((a,b)=>b[1]-a[1]).map(([f,n])=>`<div class="fl"><span class="n">${n}</span><span class="s">${esc(f).replace(/\//g,"/<wbr>")}</span></div>`).join("");
-    html+=`<div class="pcard${cut?" later":""}${ehNovo(o)?" novo":""}"><div class="pc-head"><span class="pc-num">${pad(o.num)} ${nomeTag(o)?nomeTag(o)+" ":""}${ehNovo(o)?'<span class="cons novo-tag">Novo</span> ':""}${consTag(o)}${acTag(o)}</span><span class="total">${q} ${q===1?"pastel":"pastéis"}${q>cfg.capacity?' <span style="color:var(--warn)">· maior que o fogo</span>':""}</span></div><div class="flav">${items}</div>${estufaPend(o).length?`<div class="pc-estufa"><span class="lbl">Estufa</span>${esc(estufaPend(o).join(", "))}</div>`:""}${obsTag(o)}${o.novos&&sum(o.novos)?'<div class="nota-novos">Só o que foi acrescentado. O resto deste pedido já foi para o óleo.</div>':""}<button type="button" class="fry-in" data-oleo="${esc(o.id)}">Coloquei no óleo</button></div>`;
-  });
-  const tot=list.reduce((a,o)=>a+sum(paraFritar(o)),0);
-  $("#lots").innerHTML=undo+salgBox+`<p class="muted" style="margin:0 0 10px">${list.length} pedido${list.length===1?"":"s"} para fritar · ${tot} ${tot===1?"pastel":"pastéis"}</p>`+html+oilBox;
+  /* o que cabe no fogo agora (o pedido mais antigo sempre entra, mesmo se for maior que o fogo) e as próximas levas */
+  let acc=0;const fogo=[],prox=[];
+  list.forEach(o=>{const q=sum(paraFritar(o));if(!prox.length&&(!fogo.length||acc+q<=cfg.capacity)){acc+=q;fogo.push(o)}else prox.push(o)});
+  const pl=n=>n+" "+(n===1?"pastel":"pastéis");
+  const cards=fogo.map(o=>{const fr=paraFritar(o),q=sum(fr);
+    const rows=Object.entries(fr).filter(([,n])=>n>0).sort((a,b)=>b[1]-a[1]).map(([f,n])=>`<div class="fr"><span class="n">${n}</span><span class="s">${esc(f).replace(/\//g,"/<wbr>")}</span></div>`).join("");
+    return `<div class="pcard${ehNovo(o)?" novo":""}"><div class="pc-head"><span class="pc-num">${pad(o.num)}</span>${nomeTag(o)}${ehNovo(o)?'<span class="cons novo-tag">Novo</span>':""}${consTag(o)}${acTag(o)}<span class="total">${pl(q)}${q>cfg.capacity?' <span style="color:var(--warn)">· maior que o fogo</span>':""}</span></div>${rows}${estufaPend(o).length?`<div class="pc-estufa"><span class="lbl">Estufa</span>${esc(estufaPend(o).join(", "))}</div>`:""}${o.novos&&sum(o.novos)?'<div class="nota-novos">Só o que foi acrescentado. O resto deste pedido já foi para o óleo.</div>':""}<button type="button" class="fry-in" data-oleo="${esc(o.id)}">Coloquei no óleo</button></div>`}).join("");
+  const minis=prox.map(o=>{const fr=paraFritar(o);
+    return `<div class="fr-mini${ehNovo(o)?" novo":""}"><span class="num">${pad(o.num)}</span><span class="it">${Object.entries(fr).filter(([,n])=>n>0).sort((a,b)=>b[1]-a[1]).map(([f,n])=>`<b>${n}</b> ${esc(f).replace(/\//g,"/<wbr>")}`).join(" · ")}${nomeTag(o)} <span class="tg">${o.consumo==="viagem"?"Viagem":o.consumo==="parte"?"Parte viagem":o.consumo==="aqui"?"Comer aqui":""}</span></span></div>`}).join("");
+  const proxQ=prox.reduce((a,o)=>a+sum(paraFritar(o)),0);
+  $("#lots").innerHTML=undo+salgBox+`<div class="fr-sec">No fogo agora <small>${pl(acc)} de ${cfg.capacity}${list.length>1?` · ${list.length} na fila`:""}</small>${somOn&&somArmed()?'<button type="button" class="fr-som" data-somtoggle>🔔 Som ligado</button>':""}</div><div class="fr-fogo">${cards}</div>`
+    +(prox.length?`<div class="fr-sec">Próximas levas <small>${prox.length} pedido${prox.length===1?"":"s"} · ${pl(proxQ)}</small></div><div class="fr-prox">${minis}</div>`:"")+oilBox;
 }
 document.addEventListener("click",async e=>{
   const b=e.target.closest("[data-oleo]");

@@ -112,3 +112,20 @@ test("senha certa entra sozinha e 3 erradas travam o teclado por 30 segundos", a
   await expect(page.locator("#lkMsg")).toContainText("Muitas tentativas erradas");
   await expect(pad("1")).toBeDisabled();
 });
+
+test("fritura: o que cabe no fogo em cartões, o resto em 'próximas levas', e sem observação", async ({ page }) => {
+  await abrir(page);
+  await fazerPedido(page, { pasteis: Array(14).fill("CARNE") });          // enche o fogo
+  await page.locator('#keysPastel .key[data-f="QUEIJO"]').click();
+  await page.locator('[data-obs="+ maionese"]').click();
+  await page.locator("#consAqui").click();
+  await page.locator("#btnGo").click();
+  const n = (await page.locator("#ovNum").textContent()).trim();
+  await page.locator("#ovClose").click();
+  await irPara(page, "fritura");
+  await expect(page.locator(".fr-sec").first()).toContainText("No fogo agora");
+  await expect(page.locator(".fr-prox .fr-mini", { hasText: n })).toContainText("QUEIJO");
+  await expect(page.locator("#lots .obs")).toHaveCount(0);
+  await irPara(page, "bandeja");
+  await expect(page.locator("#listBandeja .ord", { hasText: n }).locator(".obs")).toContainText("+ maionese");
+});
