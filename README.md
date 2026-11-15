@@ -123,6 +123,6 @@ npm run test:e2e                   # testes de tela em celular e tablet
 
 ---
 
-Desenvolvido por [Erick Abe](https://github.com/erickabee) para a barraca C&G Pastéis, com o Claude (IA da Anthropic) como assistente de programação.
+Desenvolvido por [Erick Abe](https://github.com/erickabee) para a barraca C&G Pastéis
 
 © 2026 Erick Abe. **Todos os direitos reservados.** O código está aberto para leitura e avaliação, como portfólio. Copiar, usar ou vender, no todo ou em parte, depende de autorização (veja [LICENSE](LICENSE)). Quer usar o sistema na sua barraca? [Fale comigo](https://github.com/erickabee).
