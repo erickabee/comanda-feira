@@ -1,13 +1,38 @@
 rules_version = '2';
+// Regras do Firestore da comanda. Valem também para o Conta no Ponto (o
+// financeiro da barraca), que usa o mesmo projeto em coleções separadas.
+// Troque os e-mails pelos logins criados em Authentication (passo 3 do
+// LEIA-ME). Para liberar mais de um login, separe por vírgula:
+// ['um@email.com', 'outro@email.com']
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Só o login da barraca lê e grava. Troque o e-mail abaixo pelo e-mail
-    // que você criou em Authentication (passo 3 do LEIA-ME). Para liberar mais
-    // de um login, separe por vírgula: ['um@email.com', 'outro@email.com']
+    // Login da barraca: pode tudo.
     function daBarraca() {
       return request.auth != null
         && request.auth.token.email in ['EMAIL-DO-LOGIN-DA-BARRACA@exemplo.com'];
     }
+
+    // Logins que só usam o financeiro: leem os resumos das feiras, mas não
+    // mexem em nada da comanda. Deixe a lista vazia se não for usar.
+    function soFinanceiro() {
+      return request.auth != null
+        && request.auth.token.email in [];
+    }
+
+    // Financeiro (Conta no Ponto)
+    match /financeiro/{documento} {
+      allow read, write: if daBarraca() || soFinanceiro();
+    }
+    match /financeiro_meses/{mes} {
+      allow read, write: if daBarraca() || soFinanceiro();
+    }
+
+    // Resumo de cada feira: a comanda grava, o financeiro só lê.
+    match /daily/{dia} {
+      allow read: if daBarraca() || soFinanceiro();
+    }
+
+    // Todo o resto é da comanda.
     match /{document=**} {
       allow read, write: if daBarraca();
     }
